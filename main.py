@@ -13,6 +13,7 @@ TODO:
 """
 
 import pygame
+import time
 
 pygame.init()
 
@@ -31,10 +32,16 @@ inp = Input("profile.json")
 running = True
 while running:
     clock.tick(fps)
+    
+    inp.passiveUpdate()
 
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
             running = False
+        if event.type == pygame.KEYDOWN:
+            inp.eventUpdate(event.key, True)
+        if event.type == pygame.KEYUP:
+            inp.eventUpdate(event.key, False)
     
     win.fill((200,200,200))
 

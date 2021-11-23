@@ -1,5 +1,5 @@
 import pygame
-import json
+import json, copy
 
 class Input:
     def loadFromFile(self, filePath):
@@ -22,8 +22,6 @@ class Input:
                     self.keyActions[key].append(action)
                 else:
                     self.keyActions[key] = [action]
-            
-        self.printKeyActions()
     
     def printKeyActions(self):
         for key, actions in self.keyActions.items():
@@ -40,8 +38,24 @@ class Input:
         if filePath != "":
             self.loadFromFile(filePath)
     
-    def eventUpdate(self, event):
-        pass
+    # state is True or False based on key down or up
+    def eventUpdate(self, key, state):
+        self.prevActionMap = copy.deepcopy(self.currentActionMap)
+        if key in self.keyActions:
+            for action in self.keyActions[key]:
+                self.currentActionMap[action] = state
     
     def passiveUpdate(self):
-        self.prevActionMap = self.currentActionMap
+        self.prevActionMap = copy.deepcopy(self.currentActionMap)
+    
+    def isActionPressed(self, action):
+        return self.currentActionMap[action]
+    
+    def isActionReleased(self, action):
+        return not self.currentActionMap[action]
+    
+    def isActionJustPressed(self, action):
+        return self.currentActionMap[action] and not self.prevActionMap[action]
+    
+    def isActionJustReleased(self, action):
+        return not self.currentActionMap[action] and self.prevActionMap[action]
