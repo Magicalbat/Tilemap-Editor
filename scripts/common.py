@@ -10,4 +10,4 @@ def createGrid(width, height, cellSize):
     
     gridSurf.set_alpha(64)
     
-    return gridSurf
+    return gridSurf.copy()

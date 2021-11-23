@@ -12,7 +12,6 @@ TODO:
 """
 
 import pygame
-import time
 
 pygame.init()
 
@@ -35,6 +34,17 @@ cellSize = 8
 gridVisible = False
 gridSurf = createGrid(width + 2 * cellSize, height + 2 * cellSize, cellSize)
 
+# SIDEBAR and MAIN SURFACE
+sideBarFraction = 0.2
+sideBarDim = (int(width * sideBarFraction), height)
+sideBar = pygame.Surface(sideBarDim).convert()
+sideBar.set_colorkey((0,0,0))
+
+tileViewDim = (int(width * (1 - sideBarFraction)), height)
+tileViewPos = pygame.math.Vector2((int(width * sideBarFraction), 0))
+tileView = pygame.Surface(tileViewDim).convert()
+tileView.set_colorkey()
+
 running = True
 while running:
     clock.tick(fps)
@@ -52,11 +62,13 @@ while running:
     if inp.isActionJustPressed("Grid"):
         gridVisible = not gridVisible
 
-    win.fill((150,150,150))
+    tileView.fill((150,150,150))
     
     if gridVisible:
-        win.blit(gridSurf, (-cellSize, -cellSize))
-
+        tileView.blit(gridSurf, (-cellSize, -cellSize))
+    
+    win.blit(tileView, tileViewPos)
+    win.blit(sideBar, (0,0))
     pygame.display.update()
 
 pygame.quit()
