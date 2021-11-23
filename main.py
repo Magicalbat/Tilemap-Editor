@@ -6,9 +6,10 @@ TODO:
  - Tileset editor
  - Tools (pencil, box select, bucket, color picker)
  - Undos and Redos
+ - Middlemouse scrolling
  - Saving and save box when closing
  - Export settings
- - Personalization settings
+ - Personalization settings (Ex: custom keybinds)
 """
 
 import pygame
@@ -23,6 +24,10 @@ pygame.display.set_caption("Tilemap Editor")
 clock = pygame.time.Clock()
 fps = 60
 
+from scripts.input import Input
+
+inp = Input("profile.json")
+
 running = True
 while running:
     clock.tick(fps)
@@ -30,5 +35,9 @@ while running:
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
             running = False
+    
+    win.fill((200,200,200))
+
+    pygame.display.update()
 
 pygame.quit()

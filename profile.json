@@ -1,6 +1,7 @@
 {
     "input":
     {
-        "Test" : ["SPACE", "a", "LSHIFT"]
+        "Test" : ["SPACE", "a", "left shift"],
+        "Test 2" : ["SPACE", "c"]
     }
 }
