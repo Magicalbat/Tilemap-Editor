@@ -1,7 +1,11 @@
 {
     "input":
     {
-        "Test" : ["SPACE", "a"],
-        "Test 2" : ["SPACE", "c"]
+        "Grid" : ["g"],
+        "Pencil" : ["p"],
+        "Box Select" : ["e"],
+        "Bucket" : ["b"],
+        "Color Picker" : ["k"],
+        "Extra Data" : ["`"]
     }
 }
