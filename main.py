@@ -1,6 +1,5 @@
 """
 TODO:
- - Event and action based input system
  - Tilesets
  - Auto tiling
  - Tileset editor
