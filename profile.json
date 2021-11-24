@@ -7,5 +7,10 @@
         "Bucket" : ["b"],
         "Color Picker" : ["k"],
         "Extra Data" : ["`"]
+    },
+    "colors":
+    {
+        "Side Bar" : [35, 35, 50],
+        "Tileview" : [175, 175, 175]
     }
 }

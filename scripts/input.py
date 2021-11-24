@@ -11,7 +11,10 @@ class Input:
         if "input" in data: data = data["input"]
         if "Input" in data: data = data["Input"]
 
-        for action, keyNames in data.items():
+        self.loadWithDictionary(data)
+
+    def loadWithDictionary(self, dict):
+        for action, keyNames in dict.items():
             self.currentActionMap[action] = False
             self.prevActionMap[action] = False
 
@@ -30,14 +33,11 @@ class Input:
                 print(action, end=", ")
             print("\b\b]")
 
-    def __init__(self, filePath=""):
+    def __init__(self):
         self.keyActions = {}
         self.currentActionMap = {}
         self.prevActionMap = {}
-
-        if filePath != "":
-            self.loadFromFile(filePath)
-    
+        
     # state is True or False based on key down or up
     def eventUpdate(self, key, state):
         self.prevActionMap = copy.deepcopy(self.currentActionMap)
