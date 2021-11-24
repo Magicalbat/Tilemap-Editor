@@ -12,6 +12,7 @@ TODO:
 """
 
 import pygame
+from pygame.constants import SCRAP_SELECTION
 
 pygame.init()
 
@@ -31,10 +32,14 @@ with open("profile.json", 'r') as f:
 profile = json.loads(data)
 
 from scripts.input import Input
+from scripts.text import Text
 from scripts.common import *
 
 inp = Input()
 inp.loadWithDictionary(profile["input"])
+
+text = Text()
+text.loadFontImg("res/text.png", scale=(2,2))
 
 tileSize = 8
 
@@ -84,12 +89,15 @@ while running:
 
     tileView.fill(tileViewCol)
     
+    tileView.blit(tilePreviewSurf, clampedMousePos)
+    
     if gridVisible:
         tileView.blit(gridSurf, (-tileSize, -tileSize))
-    tileView.blit(tilePreviewSurf, clampedMousePos)
     
     # SIDEBAR DRAW
     sideBar.fill(sideBarCol)
+
+    sideBar.blit(text.createTextSurf(f"({tileMousePos.x},{tileMousePos.y})"), (0,0))
     
     win.blit(tileView, tileViewPos)
     win.blit(sideBar, (0,0))
