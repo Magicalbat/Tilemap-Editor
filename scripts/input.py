@@ -37,7 +37,10 @@ class Input:
         self.keyActions = {}
         self.currentActionMap = {}
         self.prevActionMap = {}
-        
+
+        self.currentMouseButtons = pygame.mouse.get_pressed()
+        self.prevMouseButtons = pygame.mouse.get_pressed()
+
     # state is True or False based on key down or up
     def eventUpdate(self, key, state):
         self.prevActionMap = copy.deepcopy(self.currentActionMap)
@@ -47,6 +50,9 @@ class Input:
     
     def passiveUpdate(self):
         self.prevActionMap = copy.deepcopy(self.currentActionMap)
+
+        self.prevMouseButtons = self.currentMouseButtons
+        self.currentMouseButtons = pygame.mouse.get_pressed()
     
     def isActionPressed(self, action):
         return self.currentActionMap[action]
@@ -59,3 +65,15 @@ class Input:
     
     def isActionJustReleased(self, action):
         return not self.currentActionMap[action] and self.prevActionMap[action]
+    
+    def isMouseButtonPressed(self, button):
+        return self.currentMouseButtons[button]
+    
+    def isMouseButtonReleased(self, button):
+        return not self.currentMouseButtons[button]
+    
+    def isMouseButtonJustPressed(self, button):
+        return self.currentMouseButtons[button] and not self.prevMouseButtons[button]
+
+    def isMouseButtonJustReleased(self, button):
+        return not self.currentMouseButtons[button] and self.prevMouseButtons[button]

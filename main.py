@@ -34,6 +34,7 @@ profile = json.loads(data)
 from scripts.input import Input
 from scripts.text import Text
 from scripts.common import *
+from scripts.draw import *
 
 inp = Input()
 inp.loadWithDictionary(profile["input"])
@@ -41,7 +42,15 @@ inp.loadWithDictionary(profile["input"])
 text = Text()
 text.loadFontImg("res/text.png", scale=(2,2))
 
-tileSize = 8
+# TILES
+tileSize = 12
+tileImgs = loadSpriteSheet("res/tiles.png", (12,12), (4,4), (1,1), 16, (0,0,0))
+currentTile = 0
+
+# TILEMAP
+layers = 1
+currentLayer = 0
+drawTiles = [{'0;0' : 0} for i in range(layers)]
 
 # GRID
 gridVisible = False
@@ -62,7 +71,7 @@ tileViewCol = profile["colors"]["Tileview"]
 
 tilePreviewSurf = pygame.Surface((tileSize, tileSize)).convert()
 tilePreviewSurf.fill((0,255,0))
-tilePreviewSurf.set_alpha(128)
+tilePreviewSurf.set_alpha(64)
 
 running = True
 while running:
@@ -82,6 +91,12 @@ while running:
     tvMousePos = pygame.math.Vector2((mousePos.x - tileViewPos.x, mousePos.y)) # Tile View Mouse Pos
     tileMousePos = pygame.math.Vector2((int(tvMousePos.x / tileSize), int(tvMousePos.y / tileSize)))
     clampedMousePos = tileMousePos * tileSize
+    
+    mousePosStr = f"{int(tileMousePos.x)};{int(tileMousePos.y)}"
+
+    if inp.isMouseButtonPressed(0):
+        if mousePosStr not in drawTiles[currentLayer]:
+            drawTiles[currentLayer][mousePosStr] = currentTile
 
     # TILE VIEW DRAW
     if inp.isActionJustPressed("Grid"):
@@ -89,10 +104,13 @@ while running:
 
     tileView.fill(tileViewCol)
     
-    tileView.blit(tilePreviewSurf, clampedMousePos)
-    
     if gridVisible:
         tileView.blit(gridSurf, (-tileSize, -tileSize))
+    
+    drawTilemap(tileView, drawTiles, tileSize, tileImgs)
+    
+    #if mousePosStr not in drawTiles[currentLayer]:
+    tileView.blit(tilePreviewSurf, clampedMousePos)
     
     # SIDEBAR DRAW
     sideBar.fill(sideBarCol)
