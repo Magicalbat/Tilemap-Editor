@@ -167,6 +167,27 @@ while running:
             if mousePosStr in drawTiles[currentLayer]:
                 currentTile = drawTiles[currentLayer][mousePosStr]
                 changeState(EditStates.PENCIL)
+        elif editState == EditStates.BOX_SELECT:
+            pass
+        else: # BUCKET FILL
+            startPos = (tileMousePos.x, tileMousePos.y)
+            queue = [startPos]
+
+            while queue:
+                curPos = queue.pop()
+                if abs(curPos[0] - startPos[0]) > 20 or abs(curPos[1] - startPos[1]) > 20:  continue
+
+                pStr = f"{int(curPos[0])};{int(curPos[1])}"
+                if pStr in drawTiles[currentLayer]: continue
+                
+                currentChangeLog[currentLayer][0][pStr] = None
+                drawTiles[currentLayer][pStr] = currentTile
+                currentChangeLog[currentLayer][1][pStr] = currentTile
+
+                queue.insert(0, (curPos[0] + 1, curPos[1]))
+                queue.insert(0, (curPos[0] - 1, curPos[1]))
+                queue.insert(0, (curPos[0], curPos[1] + 1))
+                queue.insert(0, (curPos[0], curPos[1] - 1))
 
     # TILE VIEW DRAW
     if inp.isActionJustPressed("Grid"):
