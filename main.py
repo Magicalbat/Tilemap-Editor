@@ -11,8 +11,8 @@ TODO:
  - Personalization settings (Ex: custom keybinds)
 """
 
+from types import ClassMethodDescriptorType
 import pygame
-from pygame.constants import SCRAP_SELECTION
 
 pygame.init()
 
@@ -24,7 +24,7 @@ pygame.display.set_caption("Tilemap Editor")
 clock = pygame.time.Clock()
 fps = 60
 
-import json
+import json, copy
 
 data = ""
 with open("profile.json", 'r') as f:
@@ -34,7 +34,6 @@ profile = json.loads(data)
 from scripts.input import Input
 from scripts.text import Text
 from scripts.common import *
-from scripts.draw import *
 
 inp = Input()
 inp.loadWithDictionary(profile["input"])
@@ -50,7 +49,12 @@ currentTile = 0
 # TILEMAP
 layers = 1
 currentLayer = 0
-drawTiles = [{'0;0' : 0} for i in range(layers)]
+drawTiles = [{} for i in range(layers)]
+
+# UNDO / REDO
+changeHistory = [[{}]]
+undoing = False
+undoIndex = 0
 
 # GRID
 gridVisible = False
@@ -93,11 +97,38 @@ while running:
     clampedMousePos = tileMousePos * tileSize
     
     mousePosStr = f"{int(tileMousePos.x)};{int(tileMousePos.y)}"
+    
+    if inp.isMouseButtonJustReleased(0):
+        changeHistory.append(copy.deepcopy(drawTiles))
+        if len(changeHistory) > 10:
+            changeHistory = changeHistory[-10:]
+    
+    if inp.isActionJustPressed("Undo"):
+        if not undoing:
+            undoing = True
+            undoIndex = len(changeHistory) - 1
+
+        if undoing:
+            undoIndex -= 1
+            undoIndex = max(0, undoIndex)
+            if undoIndex >= 0:
+                drawTiles = copy.deepcopy(changeHistory[undoIndex])
+    
+    if undoing and inp.isActionJustPressed("Redo"):
+        undoIndex += 1
+        undoIndex = min(len(changeHistory) - 1, undoIndex)
+        if undoIndex >= 0 :
+            drawTiles = copy.deepcopy(changeHistory[undoIndex])
 
     if inp.isMouseButtonPressed(0):
+        if undoing:
+            undoing = False
+            changeHistory = changeHistory[:undoIndex]
+            changeHistory.append(copy.deepcopy(drawTiles))
+        
         if mousePosStr not in drawTiles[currentLayer]:
             drawTiles[currentLayer][mousePosStr] = currentTile
-
+        
     # TILE VIEW DRAW
     if inp.isActionJustPressed("Grid"):
         gridVisible = not gridVisible
@@ -107,7 +138,12 @@ while running:
     if gridVisible:
         tileView.blit(gridSurf, (-tileSize, -tileSize))
     
-    drawTilemap(tileView, drawTiles, tileSize, tileImgs)
+    for layer in drawTiles:
+        for pStr, imgIndex in layer.items():
+            pStr = pStr.split(';')
+            tilePos = pygame.math.Vector2((int(pStr[0]), int(pStr[1])))
+        
+            tileView.blit(tileImgs[imgIndex], tilePos * tileSize)
     
     #if mousePosStr not in drawTiles[currentLayer]:
     tileView.blit(tilePreviewSurf, clampedMousePos)
@@ -116,6 +152,9 @@ while running:
     sideBar.fill(sideBarCol)
 
     sideBar.blit(text.createTextSurf(f"({tileMousePos.x},{tileMousePos.y})"), (0,0))
+
+    if undoing:
+        pygame.draw.rect(sideBar, (0,0,255), (5, 25, 25, 25))
     
     win.blit(tileView, tileViewPos)
     win.blit(sideBar, (0,0))

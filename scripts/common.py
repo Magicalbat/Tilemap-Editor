@@ -1,4 +1,18 @@
 import pygame
+from dataclasses import dataclass
+
+@dataclass
+class DictionaryChange:
+    changes : dict
+    changeType : bool # True/False -> Add/Remove
+
+def changeDictionary(dictionary, change, reverse=False):
+    changeType = change.changeType if not reverse else not change.changeType
+    for key, value in change.changes.items():
+        if changeType:
+            dictionary[key] = value
+        elif key in dictionary:
+            dictionary.pop(key)
 
 def createGrid(width, height, tileSize):
     gridSurf = pygame.Surface((width, height)).convert()

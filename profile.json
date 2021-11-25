@@ -6,7 +6,9 @@
         "Box Select" : ["e"],
         "Bucket" : ["b"],
         "Color Picker" : ["k"],
-        "Extra Data" : ["`"]
+        "Extra Data" : ["`"],
+        "Undo" : ["u"],
+        "Redo" : ["r"]
     },
     "colors":
     {
