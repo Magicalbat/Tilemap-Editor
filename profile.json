@@ -3,13 +3,12 @@
     {
         "Grid" : ["g"],
         "Pencil" : ["p"],
-        "Box Select" : ["e"],
+        "Box Select" : ["s"],
         "Bucket" : ["b"],
         "Color Picker" : ["k"],
         "Extra Data" : ["`"],
         "Undo" : ["u"],
-        "Redo" : ["r"],
-        "Up" : ["up", "w"], "Down" : ["down", "s"], "Left" : ["left", "a"], "Right" : ["right", "d"]
+        "Redo" : ["r"]
     },
     "colors":
     {

@@ -1,5 +1,19 @@
 import pygame
-import copy
+from enum import Enum, auto
+
+class EditStates(Enum):
+    PENCIL = auto()
+    BOX_SELECT = auto()
+    BUCKET = auto()
+    COLOR_PICKER = auto()
+    SCROLL_GRAB = auto()
+
+def changeCursorFromState(state):
+    if state == EditStates.PENCIL:  setCursorFromTxt("res/levelEditor/pencil.txt")
+    if state == EditStates.BOX_SELECT:  setCursorFromTxt("res/levelEditor/box select.txt")
+    if state == EditStates.BUCKET:  setCursorFromTxt("res/levelEditor/bucket.txt")
+    if state == EditStates.COLOR_PICKER:  setCursorFromTxt("res/levelEditor/color picker.txt")
+    if state == EditStates.SCROLL_GRAB:  setCursorFromTxt("res/levelEditor/grab hand.txt")
 
 def updateDictionary(d, start, end, reverse=False):
     if reverse:

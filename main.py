@@ -59,14 +59,19 @@ undoIndex = 0
 # SCROLL
 scroll = pygame.math.Vector2((0,0))
 startScrollDrag = pygame.math.Vector2((0,0))
+prevState = None
 
 # GRID
 gridVisible = False
 gridSurf = createGrid(width + 2 * tileSize, height + 2 * tileSize, tileSize)
 
 # CURSOR INIT
-#setCursorFromTxt("res/levelEditor/pencil.txt")
-setCursorFromImg("res/levelEditor/grab hand.png", ".", "res/levelEditor/grab hand.txt")
+editState = EditStates.PENCIL
+changeCursorFromState(editState)
+def changeState(state):
+    global editState
+    editState = state
+    changeCursorFromState(editState)
 
 sideBarFraction = 0.2
 sideBarDim = (int(width * sideBarFraction), height)
@@ -98,6 +103,14 @@ while running:
             inp.eventUpdate(event.key, True)
         if event.type == pygame.KEYUP:
             inp.eventUpdate(event.key, False)
+    
+    if inp.isActionJustPressed("Extra Data"):   currentTile += 1
+    
+    if editState != EditStates.SCROLL_GRAB:
+        if inp.isActionJustPressed("Pencil"):   changeState(EditStates.PENCIL)
+        if inp.isActionJustPressed("Box Select"):   changeState(EditStates.BOX_SELECT)
+        if inp.isActionJustPressed("Bucket"):   changeState(EditStates.BUCKET)
+        if inp.isActionJustPressed("Color Picker"):   changeState(EditStates.COLOR_PICKER)
 
     mousePos = pygame.math.Vector2(pygame.mouse.get_pos())
     tvMousePos = pygame.math.Vector2((mousePos.x - tileViewPos.x, mousePos.y)) # Tile View Mouse Pos
@@ -107,14 +120,14 @@ while running:
     
     mousePosStr = f"{int(tileMousePos.x)};{int(tileMousePos.y)}"
 
-    if inp.isMouseButtonJustPressed(1): startScrollDrag = tvMousePos
-    if inp.isMouseButtonPressed(1):    scroll += startScrollDrag - tvMousePos
+    if inp.isMouseButtonJustPressed(1):
+        startScrollDrag = tvMousePos
+        prevState = editState
+        changeState(EditStates.SCROLL_GRAB)
+    if inp.isMouseButtonPressed(1):
+        scroll += startScrollDrag - tvMousePos
+    if inp.isMouseButtonJustReleased(1):    changeState(prevState)
 
-    #if inp.isActionPressed("Up"):   scroll.y -= tileSize * 4 * delta
-    #if inp.isActionPressed("Down"):   scroll.y += tileSize * 4 * delta
-    #if inp.isActionPressed("Left"):   scroll.x -= tileSize * 4 * delta
-    #if inp.isActionPressed("Right"):   scroll.x += tileSize * 4 * delta
-    
     if inp.isMouseButtonJustReleased(0):
         changeHistory.append(copy.deepcopy(currentChangeLog))
         currentChangeLog = [[{}, {}] for _ in range(len(drawTiles))]
@@ -145,11 +158,16 @@ while running:
             undoing = False
             changeHistory = changeHistory[:undoIndex]
         
-        if mousePosStr not in drawTiles[currentLayer]:
-            currentChangeLog[currentLayer][0][mousePosStr] = drawTiles[currentLayer][mousePosStr] if mousePosStr in drawTiles[currentLayer] else None
+        if editState == EditStates.PENCIL:
+            if mousePosStr not in currentChangeLog[currentLayer][0]:
+                currentChangeLog[currentLayer][0][mousePosStr] = drawTiles[currentLayer][mousePosStr] if mousePosStr in drawTiles[currentLayer] else None
             drawTiles[currentLayer][mousePosStr] = currentTile
             currentChangeLog[currentLayer][1][mousePosStr] = currentTile
-        
+        elif editState == EditStates.COLOR_PICKER:
+            if mousePosStr in drawTiles[currentLayer]:
+                currentTile = drawTiles[currentLayer][mousePosStr]
+                changeState(EditStates.PENCIL)
+
     # TILE VIEW DRAW
     if inp.isActionJustPressed("Grid"):
         gridVisible = not gridVisible
