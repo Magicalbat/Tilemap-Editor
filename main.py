@@ -11,8 +11,8 @@ TODO:
  - Personalization settings (Ex: custom keybinds)
 """
 
-from types import ClassMethodDescriptorType
 import pygame
+from pygame.display import update
 
 pygame.init()
 
@@ -49,10 +49,11 @@ currentTile = 0
 # TILEMAP
 layers = 1
 currentLayer = 0
-drawTiles = [{} for i in range(layers)]
+drawTiles = [{} for _ in range(layers)]
 
 # UNDO / REDO
-changeHistory = [[{}]]
+changeHistory = []
+currentChangeLog = [[{}, {}] for _ in range(layers)]
 undoing = False
 undoIndex = 0
 
@@ -102,35 +103,39 @@ while running:
     mousePosStr = f"{int(tileMousePos.x)};{int(tileMousePos.y)}"
     
     if inp.isMouseButtonJustReleased(0):
-        changeHistory.append(copy.deepcopy(drawTiles))
+        changeHistory.append(copy.deepcopy(currentChangeLog))
+        currentChangeLog = [[{}, {}] for _ in range(len(drawTiles))]
         if len(changeHistory) > 10:
             changeHistory = changeHistory[-10:]
     
     if inp.isActionJustPressed("Undo"):
         if not undoing:
             undoing = True
-            undoIndex = len(changeHistory) - 1
+            undoIndex = len(changeHistory) 
 
         if undoing:
             undoIndex -= 1
             undoIndex = max(0, undoIndex)
             if undoIndex >= 0:
-                drawTiles = copy.deepcopy(changeHistory[undoIndex])
+                for i in range(len(drawTiles)):
+                    updateDictionary(drawTiles[i], changeHistory[undoIndex][currentLayer][0], changeHistory[undoIndex][currentLayer][1], True)
     
     if undoing and inp.isActionJustPressed("Redo"):
-        undoIndex += 1
         undoIndex = min(len(changeHistory) - 1, undoIndex)
-        if undoIndex >= 0 :
-            drawTiles = copy.deepcopy(changeHistory[undoIndex])
+        if undoIndex >= 0:
+            for i in range(len(drawTiles)):
+                updateDictionary(drawTiles[i], changeHistory[undoIndex][currentLayer][0], changeHistory[undoIndex][currentLayer][1], False)
+        undoIndex += 1
 
     if inp.isMouseButtonPressed(0):
         if undoing:
             undoing = False
             changeHistory = changeHistory[:undoIndex]
-            changeHistory.append(copy.deepcopy(drawTiles))
         
         if mousePosStr not in drawTiles[currentLayer]:
+            currentChangeLog[currentLayer][0][mousePosStr] = drawTiles[currentLayer][mousePosStr] if mousePosStr in drawTiles[currentLayer] else None
             drawTiles[currentLayer][mousePosStr] = currentTile
+            currentChangeLog[currentLayer][1][mousePosStr] = currentTile
         
     # TILE VIEW DRAW
     if inp.isActionJustPressed("Grid"):

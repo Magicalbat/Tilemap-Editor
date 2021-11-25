@@ -1,5 +1,16 @@
 import pygame
-from dataclasses import dataclass
+import copy
+
+def updateDictionary(d, start, end, reverse=False):
+    if reverse:
+        tempE = end
+        end = start
+        start = tempE
+    for key in start.keys():
+        if isinstance(end[key], type(None)):
+            if key in d:    d.pop(key)
+        else:
+            d[key] = end[key]
 
 def createGrid(width, height, tileSize):
     gridSurf = pygame.Surface((width, height)).convert()
