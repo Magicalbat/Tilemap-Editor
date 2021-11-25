@@ -56,6 +56,10 @@ currentChangeLog = [[{}, {}] for _ in range(layers)]
 undoing = False
 undoIndex = 0
 
+# SCROLL
+scroll = pygame.math.Vector2((0,0))
+startScrollDrag = pygame.math.Vector2((0,0))
+
 # GRID
 gridVisible = False
 gridSurf = createGrid(width + 2 * tileSize, height + 2 * tileSize, tileSize)
@@ -64,7 +68,6 @@ gridSurf = createGrid(width + 2 * tileSize, height + 2 * tileSize, tileSize)
 #setCursorFromTxt("res/levelEditor/pencil.txt")
 setCursorFromImg("res/levelEditor/grab hand.png", ".", "res/levelEditor/grab hand.txt")
 
-# SIDEBAR and MAIN SURFACE
 sideBarFraction = 0.2
 sideBarDim = (int(width * sideBarFraction), height)
 sideBar = pygame.Surface(sideBarDim).convert()
@@ -84,6 +87,7 @@ tilePreviewSurf.set_alpha(64)
 running = True
 while running:
     clock.tick(fps)
+    delta = clock.get_time() / 1000
     
     inp.passiveUpdate()
 
@@ -97,10 +101,19 @@ while running:
 
     mousePos = pygame.math.Vector2(pygame.mouse.get_pos())
     tvMousePos = pygame.math.Vector2((mousePos.x - tileViewPos.x, mousePos.y)) # Tile View Mouse Pos
+    tvMousePos += scroll
     tileMousePos = pygame.math.Vector2((int(tvMousePos.x / tileSize), int(tvMousePos.y / tileSize)))
     clampedMousePos = tileMousePos * tileSize
     
     mousePosStr = f"{int(tileMousePos.x)};{int(tileMousePos.y)}"
+
+    if inp.isMouseButtonJustPressed(1): startScrollDrag = tvMousePos
+    if inp.isMouseButtonPressed(1):    scroll += startScrollDrag - tvMousePos
+
+    #if inp.isActionPressed("Up"):   scroll.y -= tileSize * 4 * delta
+    #if inp.isActionPressed("Down"):   scroll.y += tileSize * 4 * delta
+    #if inp.isActionPressed("Left"):   scroll.x -= tileSize * 4 * delta
+    #if inp.isActionPressed("Right"):   scroll.x += tileSize * 4 * delta
     
     if inp.isMouseButtonJustReleased(0):
         changeHistory.append(copy.deepcopy(currentChangeLog))
@@ -144,26 +157,23 @@ while running:
     tileView.fill(tileViewCol)
     
     if gridVisible:
-        tileView.blit(gridSurf, (-tileSize, -tileSize))
+        #pos = (-scroll.x % tileSize, -scroll.y % tileSize)
+        tileView.blit(gridSurf, pygame.math.Vector2((-scroll.x % tileSize - tileSize, -scroll.y % tileSize - tileSize)))
     
     for layer in drawTiles:
         for pStr, imgIndex in layer.items():
             pStr = pStr.split(';')
             tilePos = pygame.math.Vector2((int(pStr[0]), int(pStr[1])))
         
-            tileView.blit(tileImgs[imgIndex], tilePos * tileSize)
+            tileView.blit(tileImgs[imgIndex], tilePos * tileSize - scroll)
     
-    #if mousePosStr not in drawTiles[currentLayer]:
-    tileView.blit(tilePreviewSurf, clampedMousePos)
+    tileView.blit(tilePreviewSurf, clampedMousePos - scroll)
     
     # SIDEBAR DRAW
     sideBar.fill(sideBarCol)
 
     sideBar.blit(text.createTextSurf(f"({tileMousePos.x},{tileMousePos.y})"), (0,0))
 
-    if undoing:
-        pygame.draw.rect(sideBar, (0,0,255), (5, 25, 25, 25))
-    
     win.blit(tileView, tileViewPos)
     win.blit(sideBar, (0,0))
     pygame.display.update()

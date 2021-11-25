@@ -17,8 +17,10 @@ def createGrid(width, height, tileSize):
     gridSurf.set_colorkey((0,0,0))
     for x in range(int(width/tileSize) + 1):
         pygame.draw.line(gridSurf, (255,255,255), (x * tileSize, 0), (x * tileSize, height), 1)
+        pygame.draw.line(gridSurf, (255,255,255), ((x + 1) * tileSize - 1, 0), ((x + 1) * tileSize - 1, height), 1)
     for y in range(int(height/tileSize) + 1):
         pygame.draw.line(gridSurf, (255,255,255), (0, y * tileSize), (width, y * tileSize), 1)
+        pygame.draw.line(gridSurf, (255,255,255), (0, (y + 1) * tileSize - 1), (width, (y + 1) * tileSize - 1), 1)
     
     gridSurf.set_alpha(64)
     
