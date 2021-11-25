@@ -8,7 +8,8 @@
         "Color Picker" : ["k"],
         "Extra Data" : ["`"],
         "Undo" : ["u"],
-        "Redo" : ["r"]
+        "Redo" : ["r"],
+        "Alt Scroll Grab" : ["h"]
     },
     "colors":
     {

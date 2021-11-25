@@ -116,17 +116,18 @@ while running:
     tvMousePos = pygame.math.Vector2((mousePos.x - tileViewPos.x, mousePos.y)) # Tile View Mouse Pos
     tvMousePos += scroll
     tileMousePos = pygame.math.Vector2((int(tvMousePos.x / tileSize), int(tvMousePos.y / tileSize)))
-    clampedMousePos = tileMousePos * tileSize
+    if tileMousePos.x < 0:  tileMousePos.x -= 1
+    if tileMousePos.y < 0:  tileMousePos.y -= 1
     
     mousePosStr = f"{int(tileMousePos.x)};{int(tileMousePos.y)}"
 
-    if inp.isMouseButtonJustPressed(1):
+    if inp.isMouseButtonJustPressed(1) or inp.isActionJustPressed("Alt Scroll Grab"):
         startScrollDrag = tvMousePos
         prevState = editState
         changeState(EditStates.SCROLL_GRAB)
-    if inp.isMouseButtonPressed(1):
+    if inp.isMouseButtonPressed(1) or inp.isActionPressed("Alt Scroll Grab"):
         scroll += startScrollDrag - tvMousePos
-    if inp.isMouseButtonJustReleased(1):    changeState(prevState)
+    if inp.isMouseButtonJustReleased(1) or inp.isActionJustReleased("Alt Scroll Grab"):    changeState(prevState)
 
     if inp.isMouseButtonJustReleased(0):
         changeHistory.append(copy.deepcopy(currentChangeLog))
@@ -206,7 +207,7 @@ while running:
         
             tileView.blit(tileImgs[imgIndex], tilePos * tileSize - scroll)
     
-    tileView.blit(tilePreviewSurf, clampedMousePos - scroll)
+    tileView.blit(tilePreviewSurf, (tileMousePos * tileSize) - scroll)
     
     # SIDEBAR DRAW
     sideBar.fill(sideBarCol)
