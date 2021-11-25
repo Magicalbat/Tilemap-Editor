@@ -1,19 +1,6 @@
 import pygame
 from dataclasses import dataclass
 
-@dataclass
-class DictionaryChange:
-    changes : dict
-    changeType : bool # True/False -> Add/Remove
-
-def changeDictionary(dictionary, change, reverse=False):
-    changeType = change.changeType if not reverse else not change.changeType
-    for key, value in change.changes.items():
-        if changeType:
-            dictionary[key] = value
-        elif key in dictionary:
-            dictionary.pop(key)
-
 def createGrid(width, height, tileSize):
     gridSurf = pygame.Surface((width, height)).convert()
     gridSurf.set_colorkey((0,0,0))
@@ -63,3 +50,50 @@ def swapImgColor(img, oldCol, newCol):
     outImg.set_colorkey(img.get_colorkey())
     
     return outImg
+
+def setCursorFromTxt(filePath):
+    lines = None
+    with open(filePath, 'r') as f:
+        lines = f.read().split('\n')
+    
+    hotspot = [0,0]
+
+    if ';' in lines[0]:
+        pStr = lines[0].split(';')
+        hotspot = [int(pStr[0]), int(pStr[1])]
+        lines.pop(0)
+
+    xormasks, andmasks = pygame.cursors.compile(lines)
+    pygame.mouse.set_cursor((len(lines), len(lines[0])), hotspot, xormasks, andmasks)
+
+def setCursorFromImg(imgPath, hotspotChar="X", txtFilePath=""):
+    img = pygame.image.load(imgPath).convert_alpha()
+
+    hotspot = []
+    lines = []
+    for y in range(img.get_height()):
+        line = ""
+        for x in range(img.get_width()):
+            if img.get_at((x, y)) == (0,0,0):
+                line += "X"
+            elif img.get_at((x, y)) == (255,255,255):
+                line += "."
+            elif img.get_at((x, y)) == (255,0,0):
+                hotspot = [x, y]
+                line += hotspotChar
+            else:
+                line += " "
+        lines.append(line)
+
+    if txtFilePath != "":
+        with open(txtFilePath, 'w') as f:
+            f.write(f"{hotspot[0]};{hotspot[1]}\n")
+            for i in range(len(lines)):
+                if i == len(lines) - 1:
+                    f.write(lines[i])
+                else:
+                    f.write(lines[i] + '\n')
+
+    
+    xormasks, andmasks = pygame.cursors.compile(lines)
+    pygame.mouse.set_cursor((len(lines), len(lines[0])), hotspot, xormasks, andmasks)

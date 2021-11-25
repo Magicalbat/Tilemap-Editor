@@ -60,6 +60,9 @@ undoIndex = 0
 gridVisible = False
 gridSurf = createGrid(width + 2 * tileSize, height + 2 * tileSize, tileSize)
 
+# CURSOR INIT
+setCursorFromTxt("res/levelEditor/pencil.txt")
+
 # SIDEBAR and MAIN SURFACE
 sideBarFraction = 0.2
 sideBarDim = (int(width * sideBarFraction), height)
