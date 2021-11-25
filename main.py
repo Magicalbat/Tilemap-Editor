@@ -4,7 +4,6 @@ TODO:
  - Auto tiling
  - Tileset editor
  - Tools (pencil, box select, bucket, color picker)
- - Undos and Redos
  - Middlemouse scrolling
  - Saving and save box when closing
  - Export settings
@@ -62,7 +61,8 @@ gridVisible = False
 gridSurf = createGrid(width + 2 * tileSize, height + 2 * tileSize, tileSize)
 
 # CURSOR INIT
-setCursorFromTxt("res/levelEditor/pencil.txt")
+#setCursorFromTxt("res/levelEditor/pencil.txt")
+setCursorFromImg("res/levelEditor/grab hand.png", ".", "res/levelEditor/grab hand.txt")
 
 # SIDEBAR and MAIN SURFACE
 sideBarFraction = 0.2
