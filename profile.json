@@ -9,7 +9,9 @@
         "Extra Data" : ["`"],
         "Undo" : ["u"],
         "Redo" : ["r"],
-        "Alt Scroll Grab" : ["h"]
+        "Alt Scroll Grab" : ["h"],
+        "Selection Delete" : ["x"],
+        "Selection Fill" : ["f"]
     },
     "colors":
     {
