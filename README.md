@@ -1,4 +1,6 @@
 # Tilemap-Editor
 Tilemap level editor for all of my games.
 
-Made with Pygame: https://pygame.org
+Third-Party:
+Pygame: https://pygame.org
+EasyGui: http://easygui.sourceforge.net/
