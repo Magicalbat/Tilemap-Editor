@@ -9,7 +9,6 @@ TODO:
 """
 
 import pygame
-from pygame.display import update
 
 pygame.init()
 
@@ -21,7 +20,7 @@ pygame.display.set_caption("Tilemap Editor")
 clock = pygame.time.Clock()
 fps = 60
 
-import json, copy, sys
+import json, copy, sys, os
 
 data = ""
 with open("profile.json", 'r') as f:
@@ -49,10 +48,13 @@ currentLayer = 0
 drawTiles = [{} for _ in range(layers)]
 def loadMap(filePath):
     global drawTiles, layers
-    loadedMap = {}
-    with open(filePath, 'r') as f:   loadedMap = json.loads(f.read())
-    drawTiles = loadedMap["drawTiles"]
-    layers = len(drawTiles)
+    if os.path.exists(filePath):
+        loadedMap = {}
+        with open(filePath, 'r') as f:   loadedMap = json.loads(f.read())
+        drawTiles = loadedMap["drawTiles"]
+        layers = len(drawTiles)
+    else:
+        print(f"Could not open file at \"{filePath}\".")
 
 if profile["load map"]:    loadMap(profile["load map"])
 elif len(sys.argv) > 1:    loadMap(sys.argv[1])
