@@ -1,4 +1,5 @@
 {
+    "load map": "output.json",
     "input":
     {
         "Grid" : ["g"],
@@ -7,8 +8,10 @@
         "Bucket" : ["b"],
         "Color Picker" : ["k"],
         "Extra Data" : ["`"],
-        "Undo" : ["u"],
-        "Redo" : ["r"],
+        "Undo" : ["z"],
+        "Save" : ["s"],
+        "Control" : ["left ctrl", "right ctrl"],
+        "Shift" : ["left shift", "right shift"],
         "Alt Scroll Grab" : ["h"],
         "Selection Delete" : ["x"],
         "Selection Fill" : ["f"]
@@ -17,5 +20,9 @@
     {
         "Side Bar" : [35, 35, 50],
         "Tileview" : [175, 175, 175]
+    },
+    "export":
+    {
+        "indent" : 4
     }
 }

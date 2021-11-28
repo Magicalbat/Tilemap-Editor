@@ -3,8 +3,6 @@ TODO:
  - Tilesets
  - Auto tiling
  - Tileset editor
- - Tools (pencil, box select, bucket, color picker)
- - Middlemouse scrolling
  - Saving and save box when closing
  - Export settings
  - Personalization settings (Ex: custom keybinds)
@@ -23,7 +21,7 @@ pygame.display.set_caption("Tilemap Editor")
 clock = pygame.time.Clock()
 fps = 60
 
-import json, copy
+import json, copy, sys
 
 data = ""
 with open("profile.json", 'r') as f:
@@ -49,6 +47,25 @@ currentTile = 0
 layers = 1
 currentLayer = 0
 drawTiles = [{} for _ in range(layers)]
+def loadMap(filePath):
+    global drawTiles, layers
+    loadedMap = {}
+    with open(filePath, 'r') as f:   loadedMap = json.loads(f.read())
+    drawTiles = loadedMap["drawTiles"]
+    layers = len(drawTiles)
+
+if profile["load map"]:    loadMap(profile["load map"])
+elif len(sys.argv) > 1:    loadMap(sys.argv[1])
+
+def saveMap(filePath="output.json"):
+    output = {}
+    output["drawTiles"] = drawTiles
+
+    with open(filePath, 'w') as f:
+        if profile["export"]["indent"]:
+            f.write(json.dumps(output, indent=profile["export"]["indent"]))
+        else:
+            f.write(json.dumps(output))
 
 # UNDO / REDO
 changeHistory = []
@@ -132,11 +149,14 @@ while running:
         if event.type == pygame.KEYUP:
             inp.eventUpdate(event.key, False)
     
+    if inp.isActionJustPressed("Save") and inp.isActionPressed("Control"):
+        saveMap()
+    
     if inp.isActionJustPressed("Extra Data"):   currentTile += 1
     
     if editState != EditStates.SCROLL_GRAB:
         if inp.isActionJustPressed("Pencil"):   changeState(EditStates.PENCIL)
-        if inp.isActionJustPressed("Box Select"):   changeState(EditStates.BOX_SELECT)
+        if inp.isActionJustPressed("Box Select") and inp.isActionReleased("Control"):   changeState(EditStates.BOX_SELECT)
         if inp.isActionJustPressed("Bucket"):   changeState(EditStates.BUCKET)
         if inp.isActionJustPressed("Color Picker"):   changeState(EditStates.COLOR_PICKER)
 
@@ -155,7 +175,9 @@ while running:
         changeState(EditStates.SCROLL_GRAB)
     if inp.isMouseButtonPressed(1) or inp.isActionPressed("Alt Scroll Grab"):
         scroll += startScrollDrag - tvMousePos
-    if inp.isMouseButtonJustReleased(1) or inp.isActionJustReleased("Alt Scroll Grab"):    changeState(prevState)
+    if inp.isMouseButtonJustReleased(1) or inp.isActionJustReleased("Alt Scroll Grab"):
+        changeState(prevState)
+        prevState = EditStates.NONE
 
     if inp.isMouseButtonJustReleased(0) or inp.isMouseButtonJustReleased(2):
         changeHistory.append(copy.deepcopy(currentChangeLog))
@@ -163,7 +185,7 @@ while running:
         if len(changeHistory) > 10:
             changeHistory = changeHistory[-10:]
     
-    if inp.isActionJustPressed("Undo"):
+    if inp.isActionJustPressed("Undo") and inp.isActionPressed("Control"):
         if not undoing:
             undoing = True
             undoIndex = len(changeHistory) 
@@ -175,7 +197,7 @@ while running:
                 for i in range(len(drawTiles)):
                     updateDictionary(drawTiles[i], changeHistory[undoIndex][currentLayer][0], changeHistory[undoIndex][currentLayer][1], True)
     
-    if undoing and inp.isActionJustPressed("Redo"):
+    if undoing and inp.isActionJustPressed("Undo") and inp.isActionPressed("Control") and inp.isActionPressed("Shift"):
         undoIndex = min(len(changeHistory) - 1, undoIndex)
         if undoIndex >= 0:
             for i in range(len(drawTiles)):
@@ -268,10 +290,10 @@ while running:
         
             tileView.blit(tileImgs[imgIndex], tilePos * tileSize - scroll)
     
-    if editState != EditStates.BOX_SELECT:  tileView.blit(tilePreviewSurf, (tileMousePos * tileSize) - scroll)
+    if editState != EditStates.BOX_SELECT and prevState != EditStates.BOX_SELECT:  tileView.blit(tilePreviewSurf, (tileMousePos * tileSize) - scroll)
     else:
         r = getSelectionTileRect()
-        pygame.draw.rect(tileView, (255,255,255), (r.x * tileSize, r.y * tileSize, r.w * tileSize, r.h * tileSize), width=1)
+        pygame.draw.rect(tileView, (255,255,255), (r.x * tileSize - scroll.x, r.y * tileSize - scroll.y, r.w * tileSize, r.h * tileSize), width=1)
     
     # SIDEBAR DRAW
     sideBar.fill(sideBarCol)

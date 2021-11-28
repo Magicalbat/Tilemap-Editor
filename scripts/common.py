@@ -2,6 +2,7 @@ import pygame
 from enum import Enum, auto
 
 class EditStates(Enum):
+    NONE = auto()
     PENCIL = auto()
     BOX_SELECT = auto()
     BUCKET = auto()
