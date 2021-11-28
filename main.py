@@ -19,7 +19,9 @@ pygame.display.set_caption("Tilemap Editor")
 clock = pygame.time.Clock()
 fps = 60
 
-import json, copy, sys, os
+import json, copy, sys, os, math
+from dataclasses import dataclass, InitVar
+from typing import List, ClassVar
 from easygui import buttonbox
 
 data = ""
@@ -134,28 +136,65 @@ sideBar = pygame.Surface(sideBarDim).convert()
 sideBar.set_colorkey((0,0,0))
 sideBarCol = profile["colors"]["Side Bar"]
 
-tileSelectionDim = (int(sideBarDim[0] * 0.8), int(sideBarDim[1] * 0.6))
-tileSelectionSurf = pygame.Surface(tileSelectionDim).convert()
-tileSelectionSurf.set_colorkey((0,0,0))
-tileSelectionCol = (max(0, sideBarCol[0] - 15), max(0, sideBarCol[1] - 15), max(0, sideBarCol[2] - 15))
-tileSelectionPos = (int((sideBarDim[0] - tileSelectionDim[0]) / 2), 42)
-tileSelectionRect = pygame.Rect((tileSelectionPos[0], tileSelectionPos[1], tileSelectionDim[0], tileSelectionDim[1]))
+@dataclass
+class TileSelection:
+    dim : tuple
+    col : tuple
+    pos : pygame.Vector2
+    indent : int
+    scrollSpeed : int
+    scrollDir : int
+    imgs : InitVar[list]
+    tileSize : InitVar[int]
+    rect : ClassVar[pygame.Rect]
+    surf : ClassVar[pygame.Surface]
+    rects : ClassVar[List[pygame.Rect]]
+    num : int = 3
+    scroll : int = 0
 
-tileSelectionIndent = int(tileSize / 2)
-tileSelectionNum = 3
+    def __post_init__(self, imgs, tileSize):
+        self.rect = pygame.Rect((self.pos.x, self.pos.y, self.dim[0], self.dim[1]))
+        self.surf = pygame.Surface(self.dim).convert()
+        self.surf.set_colorkey((0,0,0))
+        self.rects = []
+        for i, img in enumerate(imgs):
+            pos = (
+                self.indent + (tileSize * 2 * (i % self.num)),\
+                self.indent + (tileSize * 2 * (i // self.num))\
+            )
+            self.surf.blit(img, pos)
+            self.rects.append([pos[0] + self.pos[0], pos[1] + self.pos[1], tileSize, tileSize])
 
-tileSelectionRects = []
-for i, img in enumerate(tileImgs):
-    pos = (
-        tileSelectionIndent + (tileSize * 2 * (i % tileSelectionNum)),\
-        tileSelectionIndent + (tileSize * 2 * (i // tileSelectionNum))\
-    )
-    tileSelectionSurf.blit(img, pos)
-    tileSelectionRects.append([pos[0] + tileSelectionPos[0], pos[1] + tileSelectionPos[1], tileSize, tileSize])
+tempDim = (int(sideBarDim[0] * 0.8), int(sideBarDim[1] * 0.6))
+ts = TileSelection(
+    tempDim, (max(0, sideBarCol[0] - 15), max(0, sideBarCol[1] - 15), max(0, sideBarCol[2] - 15)),\
+    pygame.math.Vector2((int((sideBarDim[0] - tempDim[0]) / 2), 42)), tileSize / 2, profile["scroll speed"],\
+    -1 + profile["reverse scroll"] * 2, tileImgs, tileSize\
+)
+del tempDim
 
-tileSelectionScroll = 0
-tileSelectionScrollSpeed = profile["scroll speed"]
-tileSelectionScrollDir = -1 + profile["reverse scroll"] * 2
+#tselectionDim = (int(sideBarDim[0] * 0.8), int(sideBarDim[1] * 0.6))
+#tselectionSurf = pygame.Surface(tselectionDim).convert()
+#tselectionSurf.set_colorkey((0,0,0))
+#tselectionCol = (max(0, sideBarCol[0] - 15), max(0, sideBarCol[1] - 15), max(0, sideBarCol[2] - 15))
+#tselectionPos = (int((sideBarDim[0] - tselectionDim[0]) / 2), 42)
+#tselectionRect = pygame.Rect((tselectionPos[0], tselectionPos[1], tselectionDim[0], tselectionDim[1]))
+#
+#tselectionIndent = int(tileSize / 2)
+#tselectionNum = 3
+#
+#tselectionRects = []
+#for i, img in enumerate(tileImgs):
+#    pos = (
+#        tselectionIndent + (tileSize * 2 * (i % tselectionNum)),\
+#        tselectionIndent + (tileSize * 2 * (i // tselectionNum))\
+#    )
+#    tselectionSurf.blit(img, pos)
+#    tselectionRects.append([pos[0] + tselectionPos[0], pos[1] + tselectionPos[1], tileSize, tileSize])
+#
+#tselectionScroll = 0
+#tselectionScrollSpeed = profile["scroll speed"]
+#tselectionScrollDir = -1 + profile["reverse scroll"] * 2
 
 tileViewDim = (int(width * (1 - sideBarFraction)), height)
 tileViewPos = pygame.math.Vector2((int(width * sideBarFraction), 0))
@@ -192,15 +231,13 @@ while running:
             inp.eventUpdate(event.key, False)
         if event.type == pygame.MOUSEWHEEL:
             if mousePos.x < tileViewPos.x:
-                scrollAmount = tileSelectionScrollSpeed * delta * event.y * tileSelectionScrollDir
-                tileSelectionScroll += scrollAmount
-                for r in tileSelectionRects:
+                scrollAmount = ts.scrollSpeed * delta * event.y * ts.scrollDir
+                ts.scroll += scrollAmount
+                for r in ts.rects:
                     r[1] -= scrollAmount
     
     if inp.isActionJustPressed("Save") and inp.isActionPressed("Control"):
         saveMap()
-    
-    if inp.isActionJustPressed("Extra Data"):   currentTile += 1
     
     if editState != EditStates.SCROLL_GRAB:
         if inp.isActionJustPressed("Pencil"):   changeState(EditStates.PENCIL)
@@ -210,15 +247,13 @@ while running:
 
     tvMousePos = pygame.math.Vector2((mousePos.x - tileViewPos.x, mousePos.y)) # Tile View Mouse Pos
     tvMousePos += scroll
-    tileMousePos = pygame.math.Vector2((int(tvMousePos.x / tileSize), int(tvMousePos.y / tileSize)))
-    if tileMousePos.x < 0:  tileMousePos.x -= 1
-    if tileMousePos.y < 0:  tileMousePos.y -= 1
+    tileMousePos = pygame.math.Vector2((math.floor(tvMousePos.x / tileSize), math.floor(tvMousePos.y / tileSize)))
     
     mousePosStr = f"{int(tileMousePos.x)};{int(tileMousePos.y)}"
 
     if mousePos.x < tileViewPos.x:
         if inp.isMouseButtonJustPressed(0):
-            for i, r in enumerate(tileSelectionRects):
+            for i, r in enumerate(ts.rects):
                 rect = pygame.Rect(r)
                 if rect.collidepoint(mousePos):
                     currentTile = i
@@ -352,15 +387,15 @@ while running:
     # SIDEBAR DRAW
     sideBar.fill(sideBarCol)
 
-    pygame.draw.rect(sideBar, tileSelectionCol, tileSelectionRect)
-    sideBar.blit(tileSelectionSurf, (tileSelectionPos[0], tileSelectionPos[1] - tileSelectionScroll))
-    stRect = tileSelectionRects[currentTile] # Selected tile rect
+    pygame.draw.rect(sideBar, ts.col, ts.rect)
+    sideBar.blit(ts.surf, (ts.pos[0], ts.pos[1] - ts.scroll))
+    stRect = ts.rects[currentTile] # Selected tile rect
     pygame.draw.rect(sideBar, (0,255,255), (stRect[0] - 1, stRect[1] - 1, stRect[2] + 1, stRect[3] + 1), width=1)
 
-    #for r in tileSelectionRects:
+    #for r in tselectionRects:
     #    pygame.draw.rect(sideBar, (0,255,0), r)
-    pygame.draw.rect(sideBar, sideBarCol, (0, 0, sideBarDim[0], tileSelectionRect.y))
-    pygame.draw.rect(sideBar, sideBarCol, (0, tileSelectionRect.bottom, sideBarDim[0], sideBarDim[1] - tileSelectionRect.bottom))
+    pygame.draw.rect(sideBar, sideBarCol, (0, 0, sideBarDim[0], ts.rect.y))
+    pygame.draw.rect(sideBar, sideBarCol, (0, ts.rect.bottom, sideBarDim[0], sideBarDim[1] - ts.rect.bottom))
 
     sideBar.blit(text.createTextSurf(f"({tileMousePos.x},{tileMousePos.y})"), (2, 2))
     sideBar.blit(tileImgs[currentTile], (2, 18))
