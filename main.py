@@ -3,7 +3,6 @@ TODO:
  - Tilesets
  - Auto tiling
  - Tileset editor
- - Saving and save box when closing
  - Export settings
  - Personalization settings (Ex: custom keybinds)
 """
@@ -135,6 +134,29 @@ sideBar = pygame.Surface(sideBarDim).convert()
 sideBar.set_colorkey((0,0,0))
 sideBarCol = profile["colors"]["Side Bar"]
 
+tileSelectionDim = (int(sideBarDim[0] * 0.8), int(sideBarDim[1] * 0.6))
+tileSelectionSurf = pygame.Surface(tileSelectionDim).convert()
+tileSelectionSurf.set_colorkey((0,0,0))
+tileSelectionCol = (max(0, sideBarCol[0] - 15), max(0, sideBarCol[1] - 15), max(0, sideBarCol[2] - 15))
+tileSelectionPos = (int((sideBarDim[0] - tileSelectionDim[0]) / 2), 42)
+tileSelectionRect = pygame.Rect((tileSelectionPos[0], tileSelectionPos[1], tileSelectionDim[0], tileSelectionDim[1]))
+
+tileSelectionIndent = int(tileSize / 2)
+tileSelectionNum = 3
+
+tileSelectionRects = []
+for i, img in enumerate(tileImgs):
+    pos = (
+        tileSelectionIndent + (tileSize * 2 * (i % tileSelectionNum)),\
+        tileSelectionIndent + (tileSize * 2 * (i // tileSelectionNum))\
+    )
+    tileSelectionSurf.blit(img, pos)
+    tileSelectionRects.append([pos[0] + tileSelectionPos[0], pos[1] + tileSelectionPos[1], tileSize, tileSize])
+
+tileSelectionScroll = 0
+tileSelectionScrollSpeed = profile["scroll speed"]
+tileSelectionScrollDir = -1 + profile["reverse scroll"] * 2
+
 tileViewDim = (int(width * (1 - sideBarFraction)), height)
 tileViewPos = pygame.math.Vector2((int(width * sideBarFraction), 0))
 tileView = pygame.Surface(tileViewDim).convert()
@@ -151,6 +173,8 @@ while running:
     delta = clock.get_time() / 1000
     
     inp.passiveUpdate()
+    
+    mousePos = pygame.math.Vector2(pygame.mouse.get_pos())
 
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
@@ -166,6 +190,12 @@ while running:
             inp.eventUpdate(event.key, True)
         if event.type == pygame.KEYUP:
             inp.eventUpdate(event.key, False)
+        if event.type == pygame.MOUSEWHEEL:
+            if mousePos.x < tileViewPos.x:
+                scrollAmount = tileSelectionScrollSpeed * delta * event.y * tileSelectionScrollDir
+                tileSelectionScroll += scrollAmount
+                for r in tileSelectionRects:
+                    r[1] -= scrollAmount
     
     if inp.isActionJustPressed("Save") and inp.isActionPressed("Control"):
         saveMap()
@@ -178,7 +208,6 @@ while running:
         if inp.isActionJustPressed("Bucket"):   changeState(EditStates.BUCKET)
         if inp.isActionJustPressed("Color Picker"):   changeState(EditStates.COLOR_PICKER)
 
-    mousePos = pygame.math.Vector2(pygame.mouse.get_pos())
     tvMousePos = pygame.math.Vector2((mousePos.x - tileViewPos.x, mousePos.y)) # Tile View Mouse Pos
     tvMousePos += scroll
     tileMousePos = pygame.math.Vector2((int(tvMousePos.x / tileSize), int(tvMousePos.y / tileSize)))
@@ -187,109 +216,116 @@ while running:
     
     mousePosStr = f"{int(tileMousePos.x)};{int(tileMousePos.y)}"
 
-    if inp.isMouseButtonJustPressed(1) or inp.isActionJustPressed("Alt Scroll Grab"):
-        startScrollDrag = tvMousePos
-        prevState = editState
-        changeState(EditStates.SCROLL_GRAB)
-    if inp.isMouseButtonPressed(1) or inp.isActionPressed("Alt Scroll Grab"):
-        scroll += startScrollDrag - tvMousePos
-    if inp.isMouseButtonJustReleased(1) or inp.isActionJustReleased("Alt Scroll Grab"):
-        changeState(prevState)
-        prevState = EditStates.NONE
+    if mousePos.x < tileViewPos.x:
+        if inp.isMouseButtonJustPressed(0):
+            for i, r in enumerate(tileSelectionRects):
+                rect = pygame.Rect(r)
+                if rect.collidepoint(mousePos):
+                    currentTile = i
+    else:
+        if inp.isMouseButtonJustPressed(1) or inp.isActionJustPressed("Alt Scroll Grab"):
+            startScrollDrag = tvMousePos
+            prevState = editState
+            changeState(EditStates.SCROLL_GRAB)
+        if inp.isMouseButtonPressed(1) or inp.isActionPressed("Alt Scroll Grab"):
+            scroll += startScrollDrag - tvMousePos
+        if inp.isMouseButtonJustReleased(1) or inp.isActionJustReleased("Alt Scroll Grab"):
+            changeState(prevState)
+            prevState = EditStates.NONE
 
-    if inp.isMouseButtonJustReleased(0) or inp.isMouseButtonJustReleased(2):
-        changeHistory.append(copy.deepcopy(currentChangeLog))
-        currentChangeLog = [[{}, {}] for _ in range(len(drawTiles))]
-        if len(changeHistory) > 10:
-            changeHistory = changeHistory[-10:]
-    
-    if inp.isActionJustPressed("Undo") and inp.isActionPressed("Control"):
-        if not undoing:
-            undoing = True
-            undoIndex = len(changeHistory) 
+        if inp.isMouseButtonJustReleased(0) or inp.isMouseButtonJustReleased(2):
+            changeHistory.append(copy.deepcopy(currentChangeLog))
+            currentChangeLog = [[{}, {}] for _ in range(len(drawTiles))]
+            if len(changeHistory) > 10:
+                changeHistory = changeHistory[-10:]
 
-        if undoing:
-            undoIndex -= 1
-            undoIndex = max(0, undoIndex)
+        if inp.isActionJustPressed("Undo") and inp.isActionPressed("Control"):
+            if not undoing:
+                undoing = True
+                undoIndex = len(changeHistory) 
+
+            if undoing:
+                undoIndex -= 1
+                undoIndex = max(0, undoIndex)
+                if undoIndex >= 0:
+                    for i in range(len(drawTiles)):
+                        updateDictionary(drawTiles[i], changeHistory[undoIndex][currentLayer][0], changeHistory[undoIndex][currentLayer][1], True)
+
+        if undoing and inp.isActionJustPressed("Undo") and inp.isActionPressed("Control") and inp.isActionPressed("Shift"):
+            undoIndex = min(len(changeHistory) - 1, undoIndex)
             if undoIndex >= 0:
                 for i in range(len(drawTiles)):
-                    updateDictionary(drawTiles[i], changeHistory[undoIndex][currentLayer][0], changeHistory[undoIndex][currentLayer][1], True)
-    
-    if undoing and inp.isActionJustPressed("Undo") and inp.isActionPressed("Control") and inp.isActionPressed("Shift"):
-        undoIndex = min(len(changeHistory) - 1, undoIndex)
-        if undoIndex >= 0:
-            for i in range(len(drawTiles)):
-                updateDictionary(drawTiles[i], changeHistory[undoIndex][currentLayer][0], changeHistory[undoIndex][currentLayer][1], False)
-        undoIndex += 1
+                    updateDictionary(drawTiles[i], changeHistory[undoIndex][currentLayer][0], changeHistory[undoIndex][currentLayer][1], False)
+            undoIndex += 1
 
-    if inp.isMouseButtonPressed(2):
-        tryResetUndo()
-        
-        if editState == EditStates.PENCIL:
-            if mousePosStr in drawTiles[currentLayer]:
-                currentChangeLog[currentLayer][0][mousePosStr] = drawTiles[currentLayer][mousePosStr]
-                drawTiles[currentLayer].pop(mousePosStr)
-                currentChangeLog[currentLayer][1][mousePosStr] = None
+        if inp.isMouseButtonPressed(2):
+            tryResetUndo()
+
+            if editState == EditStates.PENCIL:
+                if mousePosStr in drawTiles[currentLayer]:
+                    currentChangeLog[currentLayer][0][mousePosStr] = drawTiles[currentLayer][mousePosStr]
+                    drawTiles[currentLayer].pop(mousePosStr)
+                    currentChangeLog[currentLayer][1][mousePosStr] = None
 
 
-    if inp.isMouseButtonJustPressed(0):
-        tryResetUndo()
-        
-        if editState == EditStates.COLOR_PICKER:
-            if mousePosStr in drawTiles[currentLayer]:
-                currentTile = drawTiles[currentLayer][mousePosStr]
-                changeState(EditStates.PENCIL)
-        elif editState == EditStates.BOX_SELECT:
-            startSelectionPos = tileMousePos
-        elif editState == EditStates.BUCKET: # BUCKET FILL
-            startPos = (tileMousePos.x, tileMousePos.y)
-            queue = [startPos]
+        if inp.isMouseButtonJustPressed(0):
+            tryResetUndo()
 
-            while queue:
-                curPos = queue.pop()
-                if abs(curPos[0] - startPos[0]) > 20 or abs(curPos[1] - startPos[1]) > 20:  continue
+            if editState == EditStates.COLOR_PICKER:
+                if mousePosStr in drawTiles[currentLayer]:
+                    currentTile = drawTiles[currentLayer][mousePosStr]
+                    changeState(EditStates.PENCIL)
+            elif editState == EditStates.BOX_SELECT:
+                startSelectionPos = tileMousePos
+            elif editState == EditStates.BUCKET: # BUCKET FILL
+                startPos = (tileMousePos.x, tileMousePos.y)
+                queue = [startPos]
 
-                pStr = f"{int(curPos[0])};{int(curPos[1])}"
-                if pStr in drawTiles[currentLayer]: continue
-                
-                currentChangeLog[currentLayer][0][pStr] = None
-                drawTiles[currentLayer][pStr] = currentTile
-                currentChangeLog[currentLayer][1][pStr] = currentTile
+                while queue:
+                    curPos = queue.pop()
+                    if abs(curPos[0] - startPos[0]) > 20 or abs(curPos[1] - startPos[1]) > 20:  continue
 
-                queue.insert(0, (curPos[0] + 1, curPos[1]))
-                queue.insert(0, (curPos[0] - 1, curPos[1]))
-                queue.insert(0, (curPos[0], curPos[1] + 1))
-                queue.insert(0, (curPos[0], curPos[1] - 1))
-    
-    if inp.isMouseButtonPressed(0):
-        tryResetUndo()
-        
-        if editState == EditStates.PENCIL:
-            if mousePosStr not in currentChangeLog[currentLayer][0]:
-                currentChangeLog[currentLayer][0][mousePosStr] = drawTiles[currentLayer][mousePosStr] if mousePosStr in drawTiles[currentLayer] else None
-            drawTiles[currentLayer][mousePosStr] = currentTile
-            currentChangeLog[currentLayer][1][mousePosStr] = currentTile
-        if editState == EditStates.BOX_SELECT:
-            endSelectionPos = tileMousePos
-    
-    if editState == EditStates.BOX_SELECT:
-        if inp.isActionJustPressed("Selection Delete"):
-            sRect = getSelectionTileRect()
-            for x in range(sRect.w):
-                for y in range(sRect.h):
-                   pStr = f"{int(sRect.x + x)};{int(sRect.y + y)}"
-                   if pStr in drawTiles[currentLayer]:
-                       currentChangeLog[currentLayer][0][pStr] = drawTiles[currentLayer][pStr]
-                       drawTiles[currentLayer].pop(pStr)
-                       currentChangeLog[currentLayer][1][pStr] = None
-        elif inp.isActionJustPressed("Selection Fill"):
-            sRect = getSelectionTileRect()
-            for x in range(sRect.w):
-                for y in range(sRect.h):
-                    pStr = f"{int(sRect.x + x)};{int(sRect.y + y)}"
-                    currentChangeLog[currentLayer][0][pStr] = drawTiles[currentLayer][pStr] if pStr in drawTiles[currentLayer] else None
+                    pStr = f"{int(curPos[0])};{int(curPos[1])}"
+                    if pStr in drawTiles[currentLayer]: continue
+
+                    currentChangeLog[currentLayer][0][pStr] = None
                     drawTiles[currentLayer][pStr] = currentTile
                     currentChangeLog[currentLayer][1][pStr] = currentTile
+
+                    queue.insert(0, (curPos[0] + 1, curPos[1]))
+                    queue.insert(0, (curPos[0] - 1, curPos[1]))
+                    queue.insert(0, (curPos[0], curPos[1] + 1))
+                    queue.insert(0, (curPos[0], curPos[1] - 1))
+
+        if inp.isMouseButtonPressed(0):
+            tryResetUndo()
+
+            if editState == EditStates.PENCIL:
+                if mousePosStr not in currentChangeLog[currentLayer][0]:
+                    currentChangeLog[currentLayer][0][mousePosStr] = drawTiles[currentLayer][mousePosStr] if mousePosStr in drawTiles[currentLayer] else None
+                drawTiles[currentLayer][mousePosStr] = currentTile
+                currentChangeLog[currentLayer][1][mousePosStr] = currentTile
+            if editState == EditStates.BOX_SELECT:
+                endSelectionPos = tileMousePos
+
+        if editState == EditStates.BOX_SELECT:
+            if inp.isActionJustPressed("Selection Delete"):
+                sRect = getSelectionTileRect()
+                for x in range(sRect.w):
+                    for y in range(sRect.h):
+                       pStr = f"{int(sRect.x + x)};{int(sRect.y + y)}"
+                       if pStr in drawTiles[currentLayer]:
+                           currentChangeLog[currentLayer][0][pStr] = drawTiles[currentLayer][pStr]
+                           drawTiles[currentLayer].pop(pStr)
+                           currentChangeLog[currentLayer][1][pStr] = None
+            elif inp.isActionJustPressed("Selection Fill"):
+                sRect = getSelectionTileRect()
+                for x in range(sRect.w):
+                    for y in range(sRect.h):
+                        pStr = f"{int(sRect.x + x)};{int(sRect.y + y)}"
+                        currentChangeLog[currentLayer][0][pStr] = drawTiles[currentLayer][pStr] if pStr in drawTiles[currentLayer] else None
+                        drawTiles[currentLayer][pStr] = currentTile
+                        currentChangeLog[currentLayer][1][pStr] = currentTile
     
     # TILE VIEW DRAW
     if inp.isActionJustPressed("Grid"):
@@ -316,7 +352,18 @@ while running:
     # SIDEBAR DRAW
     sideBar.fill(sideBarCol)
 
-    sideBar.blit(text.createTextSurf(f"({tileMousePos.x},{tileMousePos.y})"), (0,0))
+    pygame.draw.rect(sideBar, tileSelectionCol, tileSelectionRect)
+    sideBar.blit(tileSelectionSurf, (tileSelectionPos[0], tileSelectionPos[1] - tileSelectionScroll))
+    stRect = tileSelectionRects[currentTile] # Selected tile rect
+    pygame.draw.rect(sideBar, (0,255,255), (stRect[0] - 1, stRect[1] - 1, stRect[2] + 1, stRect[3] + 1), width=1)
+
+    #for r in tileSelectionRects:
+    #    pygame.draw.rect(sideBar, (0,255,0), r)
+    pygame.draw.rect(sideBar, sideBarCol, (0, 0, sideBarDim[0], tileSelectionRect.y))
+    pygame.draw.rect(sideBar, sideBarCol, (0, tileSelectionRect.bottom, sideBarDim[0], sideBarDim[1] - tileSelectionRect.bottom))
+
+    sideBar.blit(text.createTextSurf(f"({tileMousePos.x},{tileMousePos.y})"), (2, 2))
+    sideBar.blit(tileImgs[currentTile], (2, 18))
 
     win.blit(tileView, tileViewPos)
     win.blit(sideBar, (0,0))
