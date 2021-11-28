@@ -1,5 +1,5 @@
 {
-    "load map": "output.json",
+    "load map": "",
     "input":
     {
         "Grid" : ["g"],

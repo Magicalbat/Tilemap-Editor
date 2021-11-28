@@ -21,6 +21,7 @@ clock = pygame.time.Clock()
 fps = 60
 
 import json, copy, sys, os
+from easygui import buttonbox
 
 data = ""
 with open("profile.json", 'r') as f:
@@ -59,9 +60,17 @@ def loadMap(filePath):
 if profile["load map"]:    loadMap(profile["load map"])
 elif len(sys.argv) > 1:    loadMap(sys.argv[1])
 
+def getSaveData():
+    return {
+        "drawTiles" : drawTiles
+    }
+
+currentSavedData = copy.deepcopy(getSaveData())
+
 def saveMap(filePath="output.json"):
-    output = {}
-    output["drawTiles"] = drawTiles
+    global currentSavedData
+    currentSavedData = copy.deepcopy(getSaveData())
+    output = currentSavedData
 
     with open(filePath, 'w') as f:
         if profile["export"]["indent"]:
@@ -145,7 +154,14 @@ while running:
 
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
-            running = False
+            if getSaveData() != currentSavedData:
+                choice = buttonbox("", "Save changes before closing?", ("Save", "Do not save", "Cancel"), default_choice="Save", cancel_choice="Cancel")
+                if choice == "Save":
+                    saveMap()
+                if choice != "Cancel":
+                    running = False
+            else:
+                running = False
         if event.type == pygame.KEYDOWN:
             inp.eventUpdate(event.key, True)
         if event.type == pygame.KEYUP:
