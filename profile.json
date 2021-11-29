@@ -1,5 +1,5 @@
 {
-    "load map" : "",
+    "load map" : "output.json",
     "reverse scroll" : false,
     "scroll speed" : 250,
     "input" :
@@ -29,7 +29,8 @@
     },
     "extra data":
     [
-        "PlayerSpawn"
+        "PlayerSpawn",
+        "Level Exit"
     ],
     "extra data colors":
     [

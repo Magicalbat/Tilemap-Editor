@@ -42,41 +42,12 @@ text.loadFontImg("res/text.png", scale=(2,2))
 tileSize = 12
 tileImgs = loadSpriteSheet("res/tiles.png", (12,12), (4,4), (1,1), 16, (0,0,0))
 currentTile = 0
+prevTile = 0
 
 # TILEMAP
 layers = 1
 currentLayer = 0
 drawTiles = [{} for _ in range(layers)]
-def loadMap(filePath):
-    global drawTiles, layers
-    if os.path.exists(filePath):
-        loadedMap = {}
-        with open(filePath, 'r') as f:   loadedMap = json.loads(f.read())
-        drawTiles = loadedMap["drawTiles"]
-        layers = len(drawTiles)
-    else:
-        print(f"Could not open file at \"{filePath}\".")
-
-if profile["load map"]:    loadMap(profile["load map"])
-elif len(sys.argv) > 1:    loadMap(sys.argv[1])
-
-def getSaveData():
-    return {
-        "drawTiles" : drawTiles
-    }
-
-currentSavedData = copy.deepcopy(getSaveData())
-
-def saveMap(filePath="output.json"):
-    global currentSavedData
-    currentSavedData = copy.deepcopy(getSaveData())
-    output = currentSavedData
-
-    with open(filePath, 'w') as f:
-        if profile["export"]["indent"]:
-            f.write(json.dumps(output, indent=profile["export"]["indent"]))
-        else:
-            f.write(json.dumps(output))
 
 # UNDO / REDO
 changeHistory = []
@@ -143,20 +114,21 @@ class TileSelection:
     indent : int
     scrollSpeed : int
     scrollDir : int
-    imgs : InitVar[list]
+    imgs : list
     tileSize : InitVar[int]
     rect : ClassVar[pygame.Rect]
     surf : ClassVar[pygame.Surface]
     rects : ClassVar[List[pygame.Rect]]
     num : int = 3
     scroll : int = 0
+    prevTile : int = 0
 
-    def __post_init__(self, imgs, tileSize):
+    def __post_init__(self, tileSize):
         self.rect = pygame.Rect((self.pos.x, self.pos.y, self.dim[0], self.dim[1]))
         self.surf = pygame.Surface(self.dim).convert()
         self.surf.set_colorkey((0,0,0))
         self.rects = []
-        for i, img in enumerate(imgs):
+        for i, img in enumerate(self.imgs):
             pos = (
                 self.indent + (tileSize * 2 * (i % self.num)),\
                 self.indent + (tileSize * 2 * (i // self.num))\
@@ -173,14 +145,19 @@ normalTS = TileSelection(
 del tempDim
 currentTS = normalTS
 
-extraData = profile["extra data"]
+# EXTRA DATA
+extraDataKeys = profile["extra data"]
+extraData = {key : [] for key in extraDataKeys}
 extraDataCols = profile["extra data colors"]
 extraDataImgs = []
-for i, data in enumerate(extraData):
+extraDataAlphaImgs = []
+for i, data in enumerate(extraDataKeys):
     tempSurf = pygame.Surface((tileSize, tileSize)).convert()
     tempSurf.fill(extraDataCols[i % len(extraDataCols)])
     tempSurf.blit(text.createTextSurf(data[0]), (0,0))
     extraDataImgs.append(tempSurf.copy())
+    tempSurf.set_alpha(128)
+    extraDataAlphaImgs.append(tempSurf.copy())
 
 extraDataTS = TileSelection(
     normalTS.dim, normalTS.col, normalTS.pos, normalTS.indent,\
@@ -197,6 +174,40 @@ tileViewCol = profile["colors"]["Tileview"]
 tilePreviewSurf = pygame.Surface((tileSize, tileSize)).convert()
 tilePreviewSurf.fill((0,255,0))
 tilePreviewSurf.set_alpha(64)
+
+def loadMap(filePath):
+    global drawTiles, extraData, layers
+    if os.path.exists(filePath):
+        loadedMap = {}
+        with open(filePath, 'r') as f:   loadedMap = json.loads(f.read())
+        drawTiles = loadedMap["drawTiles"]
+        extraData = loadedMap["extraData"]
+        layers = len(drawTiles)
+    else:
+        print(f"Could not open file at \"{filePath}\".")
+
+if profile["load map"]:    loadMap(profile["load map"])
+elif len(sys.argv) > 1:    loadMap(sys.argv[1])
+
+def getSaveData():
+    return {
+        "drawTiles" : drawTiles,
+        "extraData" : extraData
+    }
+
+currentSavedData = copy.deepcopy(getSaveData())
+
+def saveMap(filePath="output.json"):
+    global currentSavedData
+    currentSavedData = copy.deepcopy(getSaveData())
+    output = currentSavedData
+
+    with open(filePath, 'w') as f:
+        if profile["export"]["indent"]:
+            f.write(json.dumps(output, indent=profile["export"]["indent"]))
+        else:
+            f.write(json.dumps(output))
+
 
 running = True
 while running:
@@ -233,8 +244,12 @@ while running:
         currentTS = normalTS if not extraDataMode else extraDataTS
 
         if extraDataMode:
+            normalTS.prevTile = currentTile
+            currentTile = extraDataTS.prevTile
             changeCursorFromState(EditStates.PENCIL)
         else:
+            extraDataTS.prevTile = currentTile
+            currentTile = normalTS.prevTile
             changeCursorFromState(editState)
     
     if inp.isActionJustPressed("Save") and inp.isActionPressed("Control"):
@@ -249,6 +264,7 @@ while running:
     tvMousePos = pygame.math.Vector2((mousePos.x - tileViewPos.x, mousePos.y)) # Tile View Mouse Pos
     tvMousePos += scroll
     tileMousePos = pygame.math.Vector2((math.floor(tvMousePos.x / tileSize), math.floor(tvMousePos.y / tileSize)))
+    clampedTupleMousePos = (int(tileMousePos.x * tileSize), int(tileMousePos.y * tileSize))
     
     mousePosStr = f"{int(tileMousePos.x)};{int(tileMousePos.y)}"
 
@@ -363,6 +379,13 @@ while running:
                             currentChangeLog[currentLayer][0][pStr] = drawTiles[currentLayer][pStr] if pStr in drawTiles[currentLayer] else None
                             drawTiles[currentLayer][pStr] = currentTile
                             currentChangeLog[currentLayer][1][pStr] = currentTile
+        else:
+            if inp.isMouseButtonPressed(0):
+                if clampedTupleMousePos not in extraData[extraDataKeys[currentTile]]:
+                    extraData[extraDataKeys[currentTile]].append(clampedTupleMousePos)
+            elif inp.isMouseButtonPressed(2):
+                if clampedTupleMousePos in extraData[extraDataKeys[currentTile]]:
+                    extraData[extraDataKeys[currentTile]].remove(clampedTupleMousePos)
     
     # TILE VIEW DRAW
     if inp.isActionJustPressed("Grid"):
@@ -381,6 +404,10 @@ while running:
         
             tileView.blit(tileImgs[imgIndex], tilePos * tileSize - scroll)
     
+    for i, tiles in enumerate(extraData.values()):
+        for pos in tiles:
+            tileView.blit(extraDataAlphaImgs[i], pos)
+    
     if editState != EditStates.BOX_SELECT and prevState != EditStates.BOX_SELECT:  tileView.blit(tilePreviewSurf, (tileMousePos * tileSize) - scroll)
     else:
         r = getSelectionTileRect()
@@ -391,7 +418,7 @@ while running:
 
     pygame.draw.rect(sideBar, currentTS.col, currentTS.rect)
     sideBar.blit(currentTS.surf, (currentTS.pos[0], currentTS.pos[1] - currentTS.scroll))
-    stRect = currentTS.rects[currentTile] # Selected tile rect
+    stRect = currentTS.rects[currentTile % len(currentTS.rects)] # Selected tile rect
     pygame.draw.rect(sideBar, (0,255,255), (stRect[0] - 1, stRect[1] - 1, stRect[2] + 1, stRect[3] + 1), width=1)
 
     #for r in tselectionRects:
@@ -400,7 +427,7 @@ while running:
     pygame.draw.rect(sideBar, sideBarCol, (0, currentTS.rect.bottom, sideBarDim[0], sideBarDim[1] - currentTS.rect.bottom))
 
     sideBar.blit(text.createTextSurf(f"({tileMousePos.x},{tileMousePos.y})"), (2, 2))
-    sideBar.blit(tileImgs[currentTile], (2, 18))
+    sideBar.blit(currentTS.imgs[currentTile], (2, 18))
 
     win.blit(tileView, tileViewPos)
     win.blit(sideBar, (0,0))
