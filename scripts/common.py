@@ -1,5 +1,45 @@
 import pygame
 from enum import Enum, auto
+from dataclasses import dataclass, InitVar
+from typing import List, ClassVar
+
+def modifyBit(val, pos, bit):
+    mask = 1 << pos
+    return ((val & ~mask) | (bit << pos))
+
+def getBit(val, pos):
+    return (val >> pos) & 1
+
+@dataclass
+class TileSelection:
+    dim : tuple
+    col : tuple
+    pos : pygame.Vector2
+    indent : int
+    scrollSpeed : int
+    scrollDir : int
+    imgs : list
+    tileSize : InitVar[int]
+    rect : ClassVar[pygame.Rect]
+    surf : ClassVar[pygame.Surface]
+    rects : ClassVar[List[pygame.Rect]]
+    num : int = 3
+    scroll : int = 0
+    prevTile : int = 0
+
+    def __post_init__(self, tileSize):
+        self.rect = pygame.Rect((self.pos.x, self.pos.y, self.dim[0], self.dim[1]))
+        self.surf = pygame.Surface(self.dim).convert()
+        self.surf.set_colorkey((0,0,0))
+        self.rects = []
+        for i, img in enumerate(self.imgs):
+            pos = (
+                self.indent + (tileSize * 2 * (i % self.num)),\
+                self.indent + (tileSize * 2 * (i // self.num))\
+            )
+            self.surf.blit(img, pos)
+            self.rects.append([pos[0] + self.pos[0], pos[1] + self.pos[1], tileSize, tileSize])
+
 
 class EditStates(Enum):
     NONE = auto()

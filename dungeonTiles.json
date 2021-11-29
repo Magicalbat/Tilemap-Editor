@@ -1,0 +1,79 @@
+{
+    "imgPath": "res/tiles.png",
+    "imgTilePadding": [
+        1,
+        1
+    ],
+    "imgTileSheetDim": [
+        4,
+        4
+    ],
+    "tileSize": 12,
+    "tileNum": 16,
+    "tiles": [
+        {
+            "collision": true,
+            "autotile": "0b11111111"
+        },
+        {
+            "collision": true,
+            "autotile": "0b0000000"
+        },
+        {
+            "collision": true,
+            "autotile": "0b0000000"
+        },
+        {
+            "collision": true,
+            "autotile": "0b0000000"
+        },
+        {
+            "collision": true,
+            "autotile": "0b0000000"
+        },
+        {
+            "collision": true,
+            "autotile": "0b0000000"
+        },
+        {
+            "collision": true,
+            "autotile": "0b0000000"
+        },
+        {
+            "collision": true,
+            "autotile": "0b0000000"
+        },
+        {
+            "collision": true,
+            "autotile": "0b0000000"
+        },
+        {
+            "collision": true,
+            "autotile": "0b0000000"
+        },
+        {
+            "collision": true,
+            "autotile": "0b0000000"
+        },
+        {
+            "collision": true,
+            "autotile": "0b0000000"
+        },
+        {
+            "collision": true,
+            "autotile": "0b0000000"
+        },
+        {
+            "collision": true,
+            "autotile": "0b0000000"
+        },
+        {
+            "collision": true,
+            "autotile": "0b0000000"
+        },
+        {
+            "collision": true,
+            "autotile": "0b0000000"
+        }
+    ]
+}

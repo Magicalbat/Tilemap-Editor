@@ -19,8 +19,6 @@ clock = pygame.time.Clock()
 fps = 60
 
 import json, copy, sys, os, math
-from dataclasses import dataclass, InitVar
-from typing import List, ClassVar
 from easygui import buttonbox
 
 data = ""
@@ -105,36 +103,6 @@ sideBarDim = (int(width * sideBarFraction), height)
 sideBar = pygame.Surface(sideBarDim).convert()
 sideBar.set_colorkey((0,0,0))
 sideBarCol = profile["colors"]["Side Bar"]
-
-@dataclass
-class TileSelection:
-    dim : tuple
-    col : tuple
-    pos : pygame.Vector2
-    indent : int
-    scrollSpeed : int
-    scrollDir : int
-    imgs : list
-    tileSize : InitVar[int]
-    rect : ClassVar[pygame.Rect]
-    surf : ClassVar[pygame.Surface]
-    rects : ClassVar[List[pygame.Rect]]
-    num : int = 3
-    scroll : int = 0
-    prevTile : int = 0
-
-    def __post_init__(self, tileSize):
-        self.rect = pygame.Rect((self.pos.x, self.pos.y, self.dim[0], self.dim[1]))
-        self.surf = pygame.Surface(self.dim).convert()
-        self.surf.set_colorkey((0,0,0))
-        self.rects = []
-        for i, img in enumerate(self.imgs):
-            pos = (
-                self.indent + (tileSize * 2 * (i % self.num)),\
-                self.indent + (tileSize * 2 * (i // self.num))\
-            )
-            self.surf.blit(img, pos)
-            self.rects.append([pos[0] + self.pos[0], pos[1] + self.pos[1], tileSize, tileSize])
 
 tempDim = (int(sideBarDim[0] * 0.8), int(sideBarDim[1] * 0.6))
 normalTS = TileSelection(
@@ -264,7 +232,7 @@ while running:
     tvMousePos = pygame.math.Vector2((mousePos.x - tileViewPos.x, mousePos.y)) # Tile View Mouse Pos
     tvMousePos += scroll
     tileMousePos = pygame.math.Vector2((math.floor(tvMousePos.x / tileSize), math.floor(tvMousePos.y / tileSize)))
-    clampedTupleMousePos = (int(tileMousePos.x * tileSize), int(tileMousePos.y * tileSize))
+    clampedListMousePos = [int(tileMousePos.x * tileSize), int(tileMousePos.y * tileSize)]
     
     mousePosStr = f"{int(tileMousePos.x)};{int(tileMousePos.y)}"
 
@@ -381,11 +349,11 @@ while running:
                             currentChangeLog[currentLayer][1][pStr] = currentTile
         else:
             if inp.isMouseButtonPressed(0):
-                if clampedTupleMousePos not in extraData[extraDataKeys[currentTile]]:
-                    extraData[extraDataKeys[currentTile]].append(clampedTupleMousePos)
+                if clampedListMousePos not in extraData[extraDataKeys[currentTile]]:
+                    extraData[extraDataKeys[currentTile]].append(clampedListMousePos)
             elif inp.isMouseButtonPressed(2):
-                if clampedTupleMousePos in extraData[extraDataKeys[currentTile]]:
-                    extraData[extraDataKeys[currentTile]].remove(clampedTupleMousePos)
+                if clampedListMousePos in extraData[extraDataKeys[currentTile]]:
+                    extraData[extraDataKeys[currentTile]].remove(clampedListMousePos)
     
     # TILE VIEW DRAW
     if inp.isActionJustPressed("Grid"):
@@ -406,7 +374,7 @@ while running:
     
     for i, tiles in enumerate(extraData.values()):
         for pos in tiles:
-            tileView.blit(extraDataAlphaImgs[i], pos)
+            tileView.blit(extraDataAlphaImgs[i], (pos[0] - scroll.x, pos[1] - scroll.y))
     
     if editState != EditStates.BOX_SELECT and prevState != EditStates.BOX_SELECT:  tileView.blit(tilePreviewSurf, (tileMousePos * tileSize) - scroll)
     else:
