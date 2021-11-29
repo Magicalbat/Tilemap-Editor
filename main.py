@@ -264,7 +264,7 @@ while running:
     tvMousePos = pygame.math.Vector2((mousePos.x - tileViewPos.x, mousePos.y)) # Tile View Mouse Pos
     tvMousePos += scroll
     tileMousePos = pygame.math.Vector2((math.floor(tvMousePos.x / tileSize), math.floor(tvMousePos.y / tileSize)))
-    clampedTupleMousePos = (int(tileMousePos.x * tileSize), int(tileMousePos.y * tileSize))
+    clampedListMousePos = [int(tileMousePos.x * tileSize), int(tileMousePos.y * tileSize)]
     
     mousePosStr = f"{int(tileMousePos.x)};{int(tileMousePos.y)}"
 
@@ -381,11 +381,11 @@ while running:
                             currentChangeLog[currentLayer][1][pStr] = currentTile
         else:
             if inp.isMouseButtonPressed(0):
-                if clampedTupleMousePos not in extraData[extraDataKeys[currentTile]]:
-                    extraData[extraDataKeys[currentTile]].append(clampedTupleMousePos)
+                if clampedListMousePos not in extraData[extraDataKeys[currentTile]]:
+                    extraData[extraDataKeys[currentTile]].append(clampedListMousePos)
             elif inp.isMouseButtonPressed(2):
-                if clampedTupleMousePos in extraData[extraDataKeys[currentTile]]:
-                    extraData[extraDataKeys[currentTile]].remove(clampedTupleMousePos)
+                if clampedListMousePos in extraData[extraDataKeys[currentTile]]:
+                    extraData[extraDataKeys[currentTile]].remove(clampedListMousePos)
     
     # TILE VIEW DRAW
     if inp.isActionJustPressed("Grid"):
