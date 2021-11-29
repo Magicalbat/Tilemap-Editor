@@ -26,5 +26,15 @@
     "export" :
     {
         "indent" : 4
-    }
+    },
+    "extra data":
+    [
+        "PlayerSpawn"
+    ],
+    "extra data colors":
+    [
+        [255, 0, 0],
+        [0, 255, 0],
+        [0, 0, 255]
+    ]
 }
