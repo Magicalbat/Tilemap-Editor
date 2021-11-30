@@ -46,6 +46,7 @@ yOffset = 20
 
 tileDisplaySize = tileset["tileSize"] * 4
 autotileRects = []
+<<<<<<< HEAD
 for x, y in [(0, 1), (2, 1), (1, 0), (1, 2)]:
     #(1, 0), (2, 1), (0, 1), (1, 2)]:
     autotileRects.append(pygame.Rect((
@@ -53,6 +54,16 @@ for x, y in [(0, 1), (2, 1), (1, 0), (1, 2)]:
      yOffset + y * tileDisplaySize + 1,\
      tileDisplaySize - 2, tileDisplaySize - 2)
     ))
+=======
+for x in range(3):
+    for y in range(3):
+        if x != 1 or y != 1:
+            autotileRects.append(pygame.Rect((
+             xOffset + x * tileDisplaySize + 1,\
+             yOffset + y * tileDisplaySize + 1,\
+             tileDisplaySize - 2, tileDisplaySize - 2)
+            ))
+>>>>>>> e99925594845249ac01281b1b5b92aa4829b49a7
 
 buttons = {
     "collision" : pygame.Rect((xOffset + tileDisplaySize * 3 + 75, yOffset, 25, 25)),

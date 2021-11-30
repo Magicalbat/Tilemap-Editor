@@ -61,6 +61,7 @@ layers = 1
 currentLayer = 0
 drawTiles = [{} for _ in range(layers)]
 
+<<<<<<< HEAD
 def getSurroundingBitwise(x1, y1):
     surrounding = 0b0000
     for i, (x2, y2) in enumerate([(-1, 0), (1, 0), (0, -1), (0, 1)]):
@@ -69,6 +70,21 @@ def getSurroundingBitwise(x1, y1):
 
         if pStr in drawTiles[currentLayer]:
             surrounding = modifyBit(surrounding, i, 1)
+=======
+def getSurroundingBitwise(x, y):
+    k = 0
+    surrounding = 0b00000000
+    for i in range(-1, 2):
+        for j in range(-1, 2):
+            if i or j:
+                testPos = (x + i, y + j)
+                pStr = f"{int(testPos[0])};{int(testPos[1])}"
+
+                if pStr in drawTiles[currentLayer]:
+                    surrounding = modifyBit(surrounding, k, 1)
+                
+                k += 1
+>>>>>>> e99925594845249ac01281b1b5b92aa4829b49a7
     return surrounding
 
 # UNDO / REDO
@@ -377,7 +393,10 @@ while running:
                             currentChangeLog[currentLayer][0][pStr] = drawTiles[currentLayer][pStr] if pStr in drawTiles[currentLayer] else None
                             drawTiles[currentLayer][pStr] = currentTile
                             currentChangeLog[currentLayer][1][pStr] = currentTile
+<<<<<<< HEAD
                     saveChange()
+=======
+>>>>>>> e99925594845249ac01281b1b5b92aa4829b49a7
                 elif inp.isActionJustPressed("Selection Autotile"):
                     sRect = getSelectionTileRect()
                     for x in range(sRect.w):
@@ -385,12 +404,19 @@ while running:
                             pStr = f"{int(sRect.x + x)};{int(sRect.y + y)}"
                             if pStr in drawTiles[currentLayer]:
                                 surrounding = getSurroundingBitwise(sRect.x + x, sRect.y + y)
+<<<<<<< HEAD
+=======
+
+>>>>>>> e99925594845249ac01281b1b5b92aa4829b49a7
                                 t = autotiles[surrounding] if surrounding in autotiles else defaultAutotile
 
                                 currentChangeLog[currentLayer][0][pStr] = drawTiles[currentLayer][pStr]
                                 drawTiles[currentLayer][pStr] = t
                                 currentChangeLog[currentLayer][1][pStr] = t
+<<<<<<< HEAD
                     saveChange()
+=======
+>>>>>>> e99925594845249ac01281b1b5b92aa4829b49a7
 
         else:
             if inp.isMouseButtonPressed(0):
