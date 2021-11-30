@@ -14,6 +14,10 @@ import json, sys, os, copy
 from easygui import buttonbox
 
 from scripts.common import *
+from scripts.text import Text
+
+text = Text()
+text.loadFontImg("res/text.png", scale=(1,1))
 
 filePath = "dungeonTiles.json" if len(sys.argv) <= 1 else sys.argv[1]
 
@@ -51,7 +55,10 @@ for x in range(3):
              tileDisplaySize - 2, tileDisplaySize - 2)
             ))
 
-collisionToggleRect = pygame.Rect((xOffset + tileDisplaySize * 3 + 20, yOffset, 25, 25))
+buttons = {
+    "collision" : pygame.Rect((xOffset + tileDisplaySize * 3 + 75, yOffset, 25, 25)),
+    "enableAutotile" : pygame.Rect((xOffset + tileDisplaySize * 3 + 75, yOffset + 50, 25, 25))
+}
 
 currentSavedData = copy.deepcopy(tileset)
 
@@ -93,8 +100,9 @@ while running:
                     bit = getBit(int(tileset["tiles"][currentTile]["autotile"], 2), i)
                     tileset["tiles"][currentTile]["autotile"] = bin(modifyBit(int(tileset["tiles"][currentTile]["autotile"], 2), i, not bit))
             
-            if collisionToggleRect.collidepoint(mousePos):
-                tileset["tiles"][currentTile]["collision"] = not tileset["tiles"][currentTile]["collision"]
+            for key, rect in buttons.items():
+                if rect.collidepoint(mousePos):
+                    tileset["tiles"][currentTile][key] = not tileset["tiles"][currentTile][key]
 
         if event.type == pygame.MOUSEWHEEL:
             if mousePos.x < ts.rect.w:
@@ -117,9 +125,13 @@ while running:
         
         pygame.draw.rect(win, (100, 100, 125), r, width=w, border_radius=10)
     
-    if tileset["tiles"][currentTile]["collision"]:
-        pygame.draw.rect(win, (255,255,255), collisionToggleRect, border_radius=5)
-    pygame.draw.rect(win, (100, 100, 125), collisionToggleRect, width=1, border_radius=5)
+    for key, rect in buttons.items():
+        win.blit(text.createTextSurf(key), (
+            rect.x - text.measureText(key)[0] - 5, rect.y + 10
+        ))
+        if tileset["tiles"][currentTile][key]:
+            pygame.draw.rect(win, (255,255,255), rect, border_radius=5)
+        pygame.draw.rect(win, (100, 100, 125), rect, width=1, border_radius=5)
     
     pygame.display.update()
 

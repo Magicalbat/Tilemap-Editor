@@ -25,6 +25,23 @@ data = ""
 with open("profile.json", 'r') as f:
     data = f.read()
 profile = json.loads(data)
+if not profile["tileset"]:
+    print("Error: Tileset required!")
+    sys.exit()
+else:
+    with open(profile["tileset"], 'r') as f:
+        data = f.read()
+tileset = json.loads(data)
+defaultAutotile = -1
+autotiles = {}
+for i, tile in enumerate(tileset["tiles"]):
+    if tile["enableAutotile"]:
+        autotiles[int(tile["autotile"], 2)] = i
+    if "defaultAutotile" in tile:
+        defaultAutotile = i
+
+if defaultAutotile == -1:
+    defaultAutotile = [i for i in range(len(tileset["tiles"])) if tileset["tiles"][i]["enableAutotile"]][0]
 
 from scripts.input import Input
 from scripts.text import Text
@@ -46,6 +63,21 @@ prevTile = 0
 layers = 1
 currentLayer = 0
 drawTiles = [{} for _ in range(layers)]
+
+def getSurroundingBitwise(x, y):
+    k = 0
+    surrounding = 0b00000000
+    for i in range(-1, 2):
+        for j in range(-1, 2):
+            if i or j:
+                testPos = (x + i, y + j)
+                pStr = f"{int(testPos[0])};{int(testPos[1])}"
+
+                if pStr in drawTiles[currentLayer]:
+                    surrounding = modifyBit(surrounding, k, 1)
+                
+                k += 1
+    return surrounding
 
 # UNDO / REDO
 changeHistory = []
@@ -347,6 +379,20 @@ while running:
                             currentChangeLog[currentLayer][0][pStr] = drawTiles[currentLayer][pStr] if pStr in drawTiles[currentLayer] else None
                             drawTiles[currentLayer][pStr] = currentTile
                             currentChangeLog[currentLayer][1][pStr] = currentTile
+                elif inp.isActionJustPressed("Selection Autotile"):
+                    sRect = getSelectionTileRect()
+                    for x in range(sRect.w):
+                        for y in range(sRect.h):
+                            pStr = f"{int(sRect.x + x)};{int(sRect.y + y)}"
+                            if pStr in drawTiles[currentLayer]:
+                                surrounding = getSurroundingBitwise(sRect.x + x, sRect.y + y)
+
+                                t = autotiles[surrounding] if surrounding in autotiles else defaultAutotile
+
+                                currentChangeLog[currentLayer][0][pStr] = drawTiles[currentLayer][pStr]
+                                drawTiles[currentLayer][pStr] = t
+                                currentChangeLog[currentLayer][1][pStr] = t
+
         else:
             if inp.isMouseButtonPressed(0):
                 if clampedListMousePos not in extraData[extraDataKeys[currentTile]]:

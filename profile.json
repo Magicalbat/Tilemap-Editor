@@ -1,5 +1,6 @@
 {
-    "load map" : "output.json",
+    "load map" : "",
+    "tileset" : "dungeonTiles.json",
     "reverse scroll" : false,
     "scroll speed" : 250,
     "input" :
@@ -16,7 +17,8 @@
         "Shift" : ["left shift", "right shift"],
         "Alt Scroll Grab" : ["h"],
         "Selection Delete" : ["x"],
-        "Selection Fill" : ["f"]
+        "Selection Fill" : ["f"],
+        "Selection Autotile" : ["a"]
     },
     "colors" :
     {
