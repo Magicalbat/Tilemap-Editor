@@ -12,68 +12,68 @@
     "tileNum": 16,
     "tiles": [
         {
+            "collision": false,
+            "autotile": "0b11111111"
+        },
+        {
             "collision": true,
             "autotile": "0b11111111"
         },
         {
             "collision": true,
-            "autotile": "0b0000000"
+            "autotile": "0b11010110"
         },
         {
             "collision": true,
-            "autotile": "0b0000000"
+            "autotile": "0b10110"
         },
         {
             "collision": true,
-            "autotile": "0b0000000"
+            "autotile": "0b11111"
         },
         {
             "collision": true,
-            "autotile": "0b0000000"
+            "autotile": "0b1011"
         },
         {
             "collision": true,
-            "autotile": "0b0000000"
+            "autotile": "0b1101011"
         },
         {
             "collision": true,
-            "autotile": "0b0000000"
+            "autotile": "0b1101000"
         },
         {
             "collision": true,
-            "autotile": "0b0000000"
+            "autotile": "0b11111000"
         },
         {
             "collision": true,
-            "autotile": "0b0000000"
+            "autotile": "0b11010000"
         },
         {
             "collision": true,
-            "autotile": "0b0000000"
+            "autotile": "0b1000000"
         },
         {
             "collision": true,
-            "autotile": "0b0000000"
+            "autotile": "0b1000010"
         },
         {
             "collision": true,
-            "autotile": "0b0000000"
+            "autotile": "0b10"
         },
         {
             "collision": true,
-            "autotile": "0b0000000"
+            "autotile": "0b10000"
         },
         {
             "collision": true,
-            "autotile": "0b0000000"
+            "autotile": "0b11000"
         },
         {
             "collision": true,
-            "autotile": "0b0000000"
-        },
-        {
-            "collision": true,
-            "autotile": "0b0000000"
+            "autotile": "0b1000"
         }
     ]
 }

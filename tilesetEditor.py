@@ -10,7 +10,9 @@ pygame.display.set_caption("Tilemap Editor")
 clock = pygame.time.Clock()
 fps = 60
 
-import json, sys, os
+import json, sys, os, copy
+from easygui import buttonbox
+
 from scripts.common import *
 
 filePath = "dungeonTiles.json" if len(sys.argv) <= 1 else sys.argv[1]
@@ -49,6 +51,16 @@ for x in range(3):
              tileDisplaySize - 2, tileDisplaySize - 2)
             ))
 
+collisionToggleRect = pygame.Rect((xOffset + tileDisplaySize * 3 + 20, yOffset, 25, 25))
+
+currentSavedData = copy.deepcopy(tileset)
+
+def saveTileset():
+    global currentSavedData
+    with open(filePath, 'w') as f:
+        f.write(json.dumps(tileset, indent=4))
+    currentSavedData = copy.deepcopy(tileset)
+
 running = True
 while running:
     clock.tick(fps)
@@ -58,12 +70,18 @@ while running:
 
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
-            running = False
+            if tileset != currentSavedData:
+                choice = buttonbox("", "Save changes before closing?", ("Save", "Do not save", "Cancel"), default_choice="Save", cancel_choice="Cancel")
+                if choice == "Save":
+                    saveTileset()
+                if choice != "Cancel":
+                    running = False
+            else:
+                running = False
         if event.type == pygame.KEYDOWN:
             if event.key == pygame.K_s:
                 if pygame.key.get_mods() &pygame.KMOD_CTRL:
-                    with open(filePath, 'w') as f:
-                        f.write(json.dumps(tileset, indent=4))
+                    saveTileset()
         if event.type == pygame.MOUSEBUTTONDOWN:
             for i, r in enumerate(ts.rects):
                 rect = pygame.Rect(r)
@@ -74,6 +92,9 @@ while running:
                 if r.collidepoint(mousePos):
                     bit = getBit(int(tileset["tiles"][currentTile]["autotile"], 2), i)
                     tileset["tiles"][currentTile]["autotile"] = bin(modifyBit(int(tileset["tiles"][currentTile]["autotile"], 2), i, not bit))
+            
+            if collisionToggleRect.collidepoint(mousePos):
+                tileset["tiles"][currentTile]["collision"] = not tileset["tiles"][currentTile]["collision"]
 
         if event.type == pygame.MOUSEWHEEL:
             if mousePos.x < ts.rect.w:
@@ -94,7 +115,11 @@ while running:
     for i, r in enumerate(autotileRects):
         w = 0 if getBit(int(tileset["tiles"][currentTile]["autotile"], 2), i) else 1
         
-        pygame.draw.rect(win, (100, 100, 125), r, width=w)
+        pygame.draw.rect(win, (100, 100, 125), r, width=w, border_radius=10)
+    
+    if tileset["tiles"][currentTile]["collision"]:
+        pygame.draw.rect(win, (255,255,255), collisionToggleRect, border_radius=5)
+    pygame.draw.rect(win, (100, 100, 125), collisionToggleRect, width=1, border_radius=5)
     
     pygame.display.update()
 
