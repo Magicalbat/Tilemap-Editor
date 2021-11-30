@@ -1,8 +1,5 @@
 """
 TODO:
- - Tilesets
- - Auto tiling
- - Tileset editor
  - Export settings
 """
 
@@ -25,6 +22,23 @@ data = ""
 with open("profile.json", 'r') as f:
     data = f.read()
 profile = json.loads(data)
+if not profile["tileset"]:
+    print("Error: Tileset required!")
+    sys.exit()
+else:
+    with open(profile["tileset"], 'r') as f:
+        data = f.read()
+tileset = json.loads(data)
+defaultAutotile = -1
+autotiles = {}
+for i, tile in enumerate(tileset["tiles"]):
+    if tile["enableAutotile"]:
+        autotiles[int(tile["autotile"], 2)] = i
+    if "defaultAutotile" in tile:
+        defaultAutotile = i
+
+if defaultAutotile == -1:
+    defaultAutotile = [i for i in range(len(tileset["tiles"])) if tileset["tiles"][i]["enableAutotile"]][0]
 
 from scripts.input import Input
 from scripts.text import Text
@@ -47,6 +61,16 @@ layers = 1
 currentLayer = 0
 drawTiles = [{} for _ in range(layers)]
 
+def getSurroundingBitwise(x1, y1):
+    surrounding = 0b0000
+    for i, (x2, y2) in enumerate([(-1, 0), (1, 0), (0, -1), (0, 1)]):
+        testPos = (x1 + x2, y1 + y2)
+        pStr = f"{int(testPos[0])};{int(testPos[1])}"
+
+        if pStr in drawTiles[currentLayer]:
+            surrounding = modifyBit(surrounding, i, 1)
+    return surrounding
+
 # UNDO / REDO
 changeHistory = []
 currentChangeLog = [[{}, {}] for _ in range(layers)]
@@ -58,6 +82,13 @@ def tryResetUndo():
     if undoing:
         undoing = False
         changeHistory = changeHistory[:undoIndex]
+
+def saveChange():
+    global changeHistory, currentChangeLog
+    changeHistory.append(copy.deepcopy(currentChangeLog))
+    currentChangeLog = [[{}, {}] for _ in range(len(drawTiles))]
+    if len(changeHistory) > 10:
+        changeHistory = changeHistory[-10:]
 
 # SCROLL
 scroll = pygame.math.Vector2((0,0))
@@ -254,10 +285,8 @@ while running:
             prevState = EditStates.NONE
 
         if inp.isMouseButtonJustReleased(0) or inp.isMouseButtonJustReleased(2):
-            changeHistory.append(copy.deepcopy(currentChangeLog))
-            currentChangeLog = [[{}, {}] for _ in range(len(drawTiles))]
-            if len(changeHistory) > 10:
-                changeHistory = changeHistory[-10:]
+            if currentChangeLog != [[{}, {}] for _ in range(len(drawTiles))]:
+                saveChange()
 
         if inp.isActionJustPressed("Undo") and inp.isActionPressed("Control"):
             if not undoing:
@@ -339,6 +368,7 @@ while running:
                                currentChangeLog[currentLayer][0][pStr] = drawTiles[currentLayer][pStr]
                                drawTiles[currentLayer].pop(pStr)
                                currentChangeLog[currentLayer][1][pStr] = None
+                    saveChange()
                 elif inp.isActionJustPressed("Selection Fill"):
                     sRect = getSelectionTileRect()
                     for x in range(sRect.w):
@@ -347,6 +377,21 @@ while running:
                             currentChangeLog[currentLayer][0][pStr] = drawTiles[currentLayer][pStr] if pStr in drawTiles[currentLayer] else None
                             drawTiles[currentLayer][pStr] = currentTile
                             currentChangeLog[currentLayer][1][pStr] = currentTile
+                    saveChange()
+                elif inp.isActionJustPressed("Selection Autotile"):
+                    sRect = getSelectionTileRect()
+                    for x in range(sRect.w):
+                        for y in range(sRect.h):
+                            pStr = f"{int(sRect.x + x)};{int(sRect.y + y)}"
+                            if pStr in drawTiles[currentLayer]:
+                                surrounding = getSurroundingBitwise(sRect.x + x, sRect.y + y)
+                                t = autotiles[surrounding] if surrounding in autotiles else defaultAutotile
+
+                                currentChangeLog[currentLayer][0][pStr] = drawTiles[currentLayer][pStr]
+                                drawTiles[currentLayer][pStr] = t
+                                currentChangeLog[currentLayer][1][pStr] = t
+                    saveChange()
+
         else:
             if inp.isMouseButtonPressed(0):
                 if clampedListMousePos not in extraData[extraDataKeys[currentTile]]:

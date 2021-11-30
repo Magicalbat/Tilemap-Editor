@@ -13,67 +13,84 @@
     "tiles": [
         {
             "collision": false,
-            "autotile": "0b11111111"
+            "enableAutotile": false,
+            "autotile": "0b1111"
         },
         {
             "collision": true,
-            "autotile": "0b11111111"
+            "enableAutotile": true,
+            "defaultAutotile": true,
+            "autotile": "0b1111"
         },
         {
             "collision": true,
-            "autotile": "0b11010110"
-        },
-        {
-            "collision": true,
-            "autotile": "0b10110"
-        },
-        {
-            "collision": true,
-            "autotile": "0b11111"
-        },
-        {
-            "collision": true,
+            "enableAutotile": true,
             "autotile": "0b1011"
         },
         {
             "collision": true,
-            "autotile": "0b1101011"
+            "enableAutotile": true,
+            "autotile": "0b1001"
         },
         {
             "collision": true,
-            "autotile": "0b1101000"
+            "enableAutotile": true,
+            "autotile": "0b1101"
         },
         {
             "collision": true,
-            "autotile": "0b11111000"
+            "enableAutotile": true,
+            "autotile": "0b101"
         },
         {
             "collision": true,
-            "autotile": "0b11010000"
+            "enableAutotile": true,
+            "autotile": "0b111"
         },
         {
             "collision": true,
-            "autotile": "0b1000000"
+            "enableAutotile": true,
+            "autotile": "0b110"
         },
         {
             "collision": true,
-            "autotile": "0b1000010"
+            "enableAutotile": true,
+            "autotile": "0b1110"
         },
         {
             "collision": true,
+            "enableAutotile": true,
+            "autotile": "0b1010"
+        },
+        {
+            "collision": true,
+            "enableAutotile": true,
             "autotile": "0b10"
         },
         {
             "collision": true,
-            "autotile": "0b10000"
+            "enableAutotile": true,
+            "autotile": "0b11"
         },
         {
             "collision": true,
-            "autotile": "0b11000"
+            "enableAutotile": true,
+            "autotile": "0b1"
         },
         {
             "collision": true,
+            "enableAutotile": true,
             "autotile": "0b1000"
+        },
+        {
+            "collision": true,
+            "enableAutotile": true,
+            "autotile": "0b1100"
+        },
+        {
+            "collision": true,
+            "enableAutotile": true,
+            "autotile": "0b100"
         }
     ]
 }
