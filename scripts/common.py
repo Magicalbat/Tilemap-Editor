@@ -71,15 +71,94 @@ def createGrid(width, height, tileSize):
     gridSurf = pygame.Surface((width, height)).convert()
     gridSurf.set_colorkey((0,0,0))
     for x in range(int(width/tileSize) + 1):
-        pygame.draw.line(gridSurf, (255,255,255), (x * tileSize, 0), (x * tileSize, height), 1)
-        pygame.draw.line(gridSurf, (255,255,255), ((x + 1) * tileSize - 1, 0), ((x + 1) * tileSize - 1, height), 1)
+        c = (0,245,255) if x % 8 == 0 else (255,255,255)
+        pygame.draw.line(gridSurf, c, (x * tileSize, 0), (x * tileSize, height), 1)
+        pygame.draw.line(gridSurf, c, ((x + 1) * tileSize - 1, 0), ((x + 1) * tileSize - 1, height), 1)
     for y in range(int(height/tileSize) + 1):
-        pygame.draw.line(gridSurf, (255,255,255), (0, y * tileSize), (width, y * tileSize), 1)
-        pygame.draw.line(gridSurf, (255,255,255), (0, (y + 1) * tileSize - 1), (width, (y + 1) * tileSize - 1), 1)
+        c = (255,255,25)
+        pygame.draw.line(gridSurf, c, (0, y * tileSize), (width, y * tileSize), 1)
+        pygame.draw.line(gridSurf, c, (0, (y + 1) * tileSize - 1), (width, (y + 1) * tileSize - 1), 1)
     
     gridSurf.set_alpha(64)
     
     return gridSurf.copy()
+
+def generateChunks(drawTiles, collidableTiles, tileSize, optimize=True, chunkSize=8):
+    if type(collidableTiles) is not set:
+        collidableTiles = set(collidableTiles)
+    
+    chunks = {}
+    
+    for layer in drawTiles:
+        for key, i in layer.items():
+            if i in collidableTiles:
+                pos = key.split(';')
+                pos = [int(s) for s in pos]
+                
+                chunkPos = f"{int(pos[0] / chunkSize)};{int(pos[1] / chunkSize)}"
+
+                if chunkPos not in chunks:
+                    chunks[chunkPos] = []
+                
+                chunks[chunkPos].append(
+                    (pos[0] * tileSize, pos[1] * tileSize, tileSize, tileSize)
+                )
+    
+    if optimize:
+        for pos, chunk in chunks.items():
+            chunk.sort(key=lambda a:(a[0], a[1]))
+            chunks[pos] = optimizeTilemapCollision(chunk, tileSize)
+    
+    return chunks
+    
+def optimizeTilemapCollision(rects, tileSize):
+    outRects = []
+    usedRects = []
+
+    for rect in rects:
+        if rect in usedRects:
+            continue
+
+        width = tileSize
+        offset = 1
+        goingRight = True
+
+        while goingRight:
+            testRect = pygame.Rect(
+                (rect[0] + offset * tileSize, rect[1], tileSize, tileSize))
+
+            if testRect in rects and testRect not in usedRects:
+                width += tileSize
+                offset += 1
+
+                usedRects.append(testRect)
+            else:
+                goingRight = False
+
+        height = tileSize
+        offset = 1
+        goingDown = True
+
+        while goingDown:
+            testRects = [(rect[0] + i * tileSize, rect[1] + offset * tileSize, tileSize, tileSize) for i in range(int(width / tileSize))]
+
+            for tr in testRects:
+                if tr not in rects or tr in usedRects:
+                    goingDown = False
+                    break
+
+            if not goingDown:
+                break
+
+            height += tileSize
+            offset += 1
+
+            for tr in testRects:
+                usedRects.append(tr)
+
+        outRects.append((rect[0], rect[1], width, height))
+
+    return outRects
 
 def loadSpriteSheet(imgPath, spriteSize, dim, padding, count, colorKey=None):
     mainImg = pygame.image.load(imgPath).convert()

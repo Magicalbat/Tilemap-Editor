@@ -1,8 +1,3 @@
-"""
-TODO:
- - Export settings
-"""
-
 import pygame
 
 pygame.init()
@@ -29,7 +24,9 @@ else:
     with open(profile["tileset"], 'r') as f:
         data = f.read()
 tileset = json.loads(data)
+tileSize = tileset['tileSize']
 defaultAutotile = -1
+collisionTiles = set([i for i, tile in enumerate(tileset["tiles"]) if tile["collision"]])
 autotiles = {}
 for i, tile in enumerate(tileset["tiles"]):
     if tile["enableAutotile"]:
@@ -57,11 +54,10 @@ currentTile = 0
 prevTile = 0
 
 # TILEMAP
-layers = 1
+layers = 3
 currentLayer = 0
 drawTiles = [{} for _ in range(layers)]
 
-<<<<<<< HEAD
 def getSurroundingBitwise(x1, y1):
     surrounding = 0b0000
     for i, (x2, y2) in enumerate([(-1, 0), (1, 0), (0, -1), (0, 1)]):
@@ -70,21 +66,6 @@ def getSurroundingBitwise(x1, y1):
 
         if pStr in drawTiles[currentLayer]:
             surrounding = modifyBit(surrounding, i, 1)
-=======
-def getSurroundingBitwise(x, y):
-    k = 0
-    surrounding = 0b00000000
-    for i in range(-1, 2):
-        for j in range(-1, 2):
-            if i or j:
-                testPos = (x + i, y + j)
-                pStr = f"{int(testPos[0])};{int(testPos[1])}"
-
-                if pStr in drawTiles[currentLayer]:
-                    surrounding = modifyBit(surrounding, k, 1)
-                
-                k += 1
->>>>>>> e99925594845249ac01281b1b5b92aa4829b49a7
     return surrounding
 
 # UNDO / REDO
@@ -154,7 +135,7 @@ sideBarCol = profile["colors"]["Side Bar"]
 tempDim = (int(sideBarDim[0] * 0.8), int(sideBarDim[1] * 0.6))
 normalTS = TileSelection(
     tempDim, (max(0, sideBarCol[0] - 15), max(0, sideBarCol[1] - 15), max(0, sideBarCol[2] - 15)),\
-    pygame.math.Vector2((int((sideBarDim[0] - tempDim[0]) / 2), 42)), tileSize / 2, profile["scroll speed"],\
+    pygame.math.Vector2((int((sideBarDim[0] - tempDim[0]) / 2), 56)), tileSize / 2, profile["scroll speed"],\
     -1 + profile["reverse scroll"] * 2, tileImgs, tileSize
 )
 del tempDim
@@ -207,7 +188,8 @@ elif len(sys.argv) > 1:    loadMap(sys.argv[1])
 def getSaveData():
     return {
         "drawTiles" : drawTiles,
-        "extraData" : extraData
+        "extraData" : extraData,
+        "chunks" : generateChunks(drawTiles, collisionTiles, tileSize)
     }
 
 currentSavedData = copy.deepcopy(getSaveData())
@@ -253,6 +235,10 @@ while running:
                 currentTS.scroll += scrollAmount
                 for r in currentTS.rects:
                     r[1] -= scrollAmount
+    
+    if inp.isActionJustPressed("Change Layer"):
+        currentLayer += 1
+        currentLayer %= len(drawTiles)
     
     if inp.isActionJustPressed("Extra Data"):
         extraDataMode = not extraDataMode
@@ -393,10 +379,7 @@ while running:
                             currentChangeLog[currentLayer][0][pStr] = drawTiles[currentLayer][pStr] if pStr in drawTiles[currentLayer] else None
                             drawTiles[currentLayer][pStr] = currentTile
                             currentChangeLog[currentLayer][1][pStr] = currentTile
-<<<<<<< HEAD
                     saveChange()
-=======
->>>>>>> e99925594845249ac01281b1b5b92aa4829b49a7
                 elif inp.isActionJustPressed("Selection Autotile"):
                     sRect = getSelectionTileRect()
                     for x in range(sRect.w):
@@ -404,19 +387,13 @@ while running:
                             pStr = f"{int(sRect.x + x)};{int(sRect.y + y)}"
                             if pStr in drawTiles[currentLayer]:
                                 surrounding = getSurroundingBitwise(sRect.x + x, sRect.y + y)
-<<<<<<< HEAD
-=======
 
->>>>>>> e99925594845249ac01281b1b5b92aa4829b49a7
                                 t = autotiles[surrounding] if surrounding in autotiles else defaultAutotile
 
                                 currentChangeLog[currentLayer][0][pStr] = drawTiles[currentLayer][pStr]
                                 drawTiles[currentLayer][pStr] = t
                                 currentChangeLog[currentLayer][1][pStr] = t
-<<<<<<< HEAD
                     saveChange()
-=======
->>>>>>> e99925594845249ac01281b1b5b92aa4829b49a7
 
         else:
             if inp.isMouseButtonPressed(0):
@@ -436,12 +413,18 @@ while running:
         #pos = (-scroll.x % tileSize, -scroll.y % tileSize)
         tileView.blit(gridSurf, pygame.math.Vector2((-scroll.x % tileSize - tileSize, -scroll.y % tileSize - tileSize)))
     
-    for layer in drawTiles:
+    for i, layer in enumerate(drawTiles):
+        tempSurf = pygame.Surface(tileViewDim).convert()
+        tempSurf.set_colorkey((0,0,0))
         for pStr, imgIndex in layer.items():
             pStr = pStr.split(';')
             tilePos = pygame.math.Vector2((int(pStr[0]), int(pStr[1])))
         
-            tileView.blit(tileImgs[imgIndex], tilePos * tileSize - scroll)
+            tempSurf.blit(tileImgs[imgIndex], tilePos * tileSize - scroll)
+        
+        if i != currentLayer:
+            tempSurf.set_alpha(64)
+        tileView.blit(tempSurf, (0,0))
     
     for i, tiles in enumerate(extraData.values()):
         for pos in tiles:
@@ -466,7 +449,8 @@ while running:
     pygame.draw.rect(sideBar, sideBarCol, (0, currentTS.rect.bottom, sideBarDim[0], sideBarDim[1] - currentTS.rect.bottom))
 
     sideBar.blit(text.createTextSurf(f"({tileMousePos.x},{tileMousePos.y})"), (2, 2))
-    sideBar.blit(currentTS.imgs[currentTile], (2, 18))
+    sideBar.blit(text.createTextSurf(f"Layer: {currentLayer}"), (2, 18))
+    sideBar.blit(currentTS.imgs[currentTile], (2, 36))
 
     win.blit(tileView, tileViewPos)
     win.blit(sideBar, (0,0))

@@ -11,6 +11,7 @@
         "Bucket" : ["b"],
         "Color Picker" : ["k"],
         "Extra Data" : ["`"],
+        "Change Layer" : ["tab", "space"],
         "Undo" : ["z"],
         "Save" : ["s"],
         "Control" : ["left ctrl", "right ctrl"],
