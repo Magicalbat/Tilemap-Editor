@@ -48,13 +48,20 @@ text = Text()
 text.loadFontImg("res/text.png", scale=(2,2))
 
 # TILES
-tileSize = 12
-tileImgs = loadSpriteSheet("res/tiles.png", (12,12), (4,4), (1,1), 16, (0,0,0))
+tileSize = tileset["tileSize"]
+tileImgs = loadSpriteSheet(\
+    tileset["imgPath"],\
+    (tileset["tileSize"], tileset["tileSize"]),\
+    tileset["imgTileSheetDim"],\
+    tileset["imgTilePadding"], tileset["tileNum"],\
+    (0,0,0)\
+)
+#tileImgs = loadSpriteSheet("res/tiles.png", (12,12), (4,4), (1,1), 16, (0,0,0))
 currentTile = 0
 prevTile = 0
 
 # TILEMAP
-layers = 3
+layers = 2
 currentLayer = 0
 drawTiles = [{} for _ in range(layers)]
 
@@ -178,6 +185,7 @@ def loadMap(filePath):
         with open(filePath, 'r') as f:   loadedMap = json.loads(f.read())
         drawTiles = loadedMap["drawTiles"]
         extraData = loadedMap["extraData"]
+        print(extraData)
         layers = len(drawTiles)
     else:
         print(f"Could not open file at \"{filePath}\".")
@@ -188,8 +196,8 @@ elif len(sys.argv) > 1:    loadMap(sys.argv[1])
 def getSaveData():
     return {
         "drawTiles" : drawTiles,
-        "extraData" : extraData,
-        "chunks" : generateChunks(drawTiles, collisionTiles, tileSize)
+        "chunks" : generateChunks(drawTiles, collisionTiles, tileSize),
+        "extraData" : extraData
     }
 
 currentSavedData = copy.deepcopy(getSaveData())

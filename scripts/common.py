@@ -32,6 +32,7 @@ class TileSelection:
         self.surf = pygame.Surface(self.dim).convert()
         self.surf.set_colorkey((0,0,0))
         self.rects = []
+        self.num = int(self.dim[0] / (tileSize * 2))
         for i, img in enumerate(self.imgs):
             pos = (
                 self.indent + (tileSize * 2 * (i % self.num)),\
@@ -71,11 +72,11 @@ def createGrid(width, height, tileSize):
     gridSurf = pygame.Surface((width, height)).convert()
     gridSurf.set_colorkey((0,0,0))
     for x in range(int(width/tileSize) + 1):
-        c = (0,245,255) if x % 8 == 0 else (255,255,255)
+        c = (255,255,255)#(0,245,255) if x % 8 == 0 else (255,255,255)
         pygame.draw.line(gridSurf, c, (x * tileSize, 0), (x * tileSize, height), 1)
         pygame.draw.line(gridSurf, c, ((x + 1) * tileSize - 1, 0), ((x + 1) * tileSize - 1, height), 1)
     for y in range(int(height/tileSize) + 1):
-        c = (255,255,25)
+        #c = (255,255,25)
         pygame.draw.line(gridSurf, c, (0, y * tileSize), (width, y * tileSize), 1)
         pygame.draw.line(gridSurf, c, (0, (y + 1) * tileSize - 1), (width, (y + 1) * tileSize - 1), 1)
     

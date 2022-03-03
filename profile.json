@@ -1,6 +1,6 @@
 {
     "load map" : "",
-    "tileset" : "dungeonTiles.json",
+    "tileset" : "tempTiles.json",
     "reverse scroll" : false,
     "scroll speed" : 250,
     "input" :
@@ -33,7 +33,10 @@
     "extra data":
     [
         "PlayerSpawn",
-        "Level Exit"
+        "CameraTriggers",
+        "0 Level",
+        "1 Level",
+        "2 Level"
     ],
     "extra data colors":
     [

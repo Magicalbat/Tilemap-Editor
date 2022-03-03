@@ -19,7 +19,7 @@ from scripts.text import Text
 text = Text()
 text.loadFontImg("res/text.png", scale=(1,1))
 
-filePath = "dungeonTiles.json" if len(sys.argv) <= 1 else sys.argv[1]
+filePath = "tempTiles.json" if len(sys.argv) <= 1 else sys.argv[1]
 
 data = "{}"
 if os.path.exists(filePath):
