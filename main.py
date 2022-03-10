@@ -2,8 +2,8 @@ import pygame
 
 pygame.init()
 
-width = int(320 * 1.5)
-height = int(180 * 1.5)
+width = int(320 * 4)
+height = int(180 * 4)
 win = pygame.display.set_mode((width, height), pygame.SCALED | pygame.RESIZABLE, 8)
 pygame.display.set_caption("Tilemap Editor")
 
@@ -185,7 +185,6 @@ def loadMap(filePath):
         with open(filePath, 'r') as f:   loadedMap = json.loads(f.read())
         drawTiles = loadedMap["drawTiles"]
         extraData = loadedMap["extraData"]
-        print(extraData)
         layers = len(drawTiles)
     else:
         print(f"Could not open file at \"{filePath}\".")
@@ -459,6 +458,8 @@ while running:
     sideBar.blit(text.createTextSurf(f"({tileMousePos.x},{tileMousePos.y})"), (2, 2))
     sideBar.blit(text.createTextSurf(f"Layer: {currentLayer}"), (2, 18))
     sideBar.blit(currentTS.imgs[currentTile], (2, 36))
+    if extraDataMode:
+        sideBar.blit(text.createTextSurf(extraDataKeys[currentTile]), (2, sideBar.get_height()-20))
 
     win.blit(tileView, tileViewPos)
     win.blit(sideBar, (0,0))

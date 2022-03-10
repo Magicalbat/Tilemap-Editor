@@ -34,9 +34,12 @@
     [
         "PlayerSpawn",
         "CameraTriggers",
-        "0 Level",
-        "1 Level",
-        "2 Level"
+	    "GroundEnemies",
+	    "JumpingEnemies",
+        "FlyingEnemies",
+	    "Fire",
+	    "SlimeMold",
+        "Acid"
     ],
     "extra data colors":
     [
