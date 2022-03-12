@@ -2,8 +2,8 @@ import pygame
 
 pygame.init()
 
-width = int(320 * 4)
-height = int(180 * 4)
+width = int(320 * 1.5)
+height = int(180 * 1.5)
 win = pygame.display.set_mode((width, height), pygame.SCALED | pygame.RESIZABLE, 8)
 pygame.display.set_caption("Tilemap Editor")
 

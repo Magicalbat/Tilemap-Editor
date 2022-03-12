@@ -3,6 +3,8 @@ from enum import Enum, auto
 from dataclasses import dataclass, InitVar
 from typing import List, ClassVar
 
+import math
+
 def modifyBit(val, pos, bit):
     mask = 1 << pos
     return ((val & ~mask) | (bit << pos))

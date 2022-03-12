@@ -37,9 +37,13 @@
 	    "GroundEnemies",
 	    "JumpingEnemies",
         "FlyingEnemies",
+        "SlowEnemies",
 	    "Fire",
 	    "SlimeMold",
-        "Acid"
+        "Acid",
+        "DoorLock",
+        "ToLevel",
+        "FromLevel"
     ],
     "extra data colors":
     [
