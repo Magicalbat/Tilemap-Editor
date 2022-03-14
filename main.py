@@ -2,8 +2,8 @@ import pygame
 
 pygame.init()
 
-width = int(320 * 1.5)
-height = int(180 * 1.5)
+width = int(320 * 3)
+height = int(180 * 3)
 win = pygame.display.set_mode((width, height), pygame.SCALED | pygame.RESIZABLE, 8)
 pygame.display.set_caption("Tilemap Editor")
 
@@ -184,7 +184,9 @@ def loadMap(filePath):
         loadedMap = {}
         with open(filePath, 'r') as f:   loadedMap = json.loads(f.read())
         drawTiles = loadedMap["drawTiles"]
-        extraData = loadedMap["extraData"]
+        #extraData = loadedMap["extraData"]
+        for key, item in loadedMap["extraData"].items():
+            extraData[key] = item
         layers = len(drawTiles)
     else:
         print(f"Could not open file at \"{filePath}\".")
@@ -272,9 +274,9 @@ while running:
     tvMousePos = pygame.math.Vector2((mousePos.x - tileViewPos.x, mousePos.y)) # Tile View Mouse Pos
     tvMousePos += scroll
     tileMousePos = pygame.math.Vector2((math.floor(tvMousePos.x / tileSize), math.floor(tvMousePos.y / tileSize)))
-    clampedListMousePos = [int(tileMousePos.x * tileSize), int(tileMousePos.y * tileSize)]
+    clampedListMousePos = [math.floor(tileMousePos.x * tileSize), math.floor(tileMousePos.y * tileSize)]
     
-    mousePosStr = f"{int(tileMousePos.x)};{int(tileMousePos.y)}"
+    mousePosStr = f"{math.floor(tileMousePos.x)};{math.floor(tileMousePos.y)}"
 
     if mousePos.x < tileViewPos.x:
         if inp.isMouseButtonJustPressed(0):

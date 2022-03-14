@@ -1,6 +1,6 @@
 {
     "load map" : "",
-    "tileset" : "tempTiles.json",
+    "tileset" : "labtiles.json",
     "reverse scroll" : false,
     "scroll speed" : 250,
     "input" :
@@ -24,7 +24,7 @@
     "colors" :
     {
         "Side Bar" : [35, 35, 50],
-        "Tileview" : [175, 175, 175]
+        "Tileview" : [50, 50, 125]
     },
     "export" :
     {
@@ -34,21 +34,25 @@
     [
         "PlayerSpawn",
         "CameraTriggers",
-	    "GroundEnemies",
-	    "JumpingEnemies",
+        "GroundEnemies",
+        "JumpingEnemies",
         "FlyingEnemies",
         "SlowEnemies",
-	    "Fire",
-	    "SlimeMold",
+        "Fire",
+        "SlimeMold",
         "Acid",
-        "DoorLock",
+        "Boss",
+        "BossDamagePoints",
         "ToLevel",
         "FromLevel"
     ],
     "extra data colors":
     [
-        [255, 0, 0],
-        [0, 255, 0],
-        [0, 0, 255]
+        [255, 0  , 0  ],
+        [0  , 255, 0  ],
+        [0  , 0  , 255],
+        [255, 255, 0  ],
+        [0  , 255, 255],
+        [255, 0  , 255]
     ]
 }

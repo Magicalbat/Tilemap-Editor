@@ -31,7 +31,8 @@ class TileSelection:
 
     def __post_init__(self, tileSize):
         self.rect = pygame.Rect((self.pos.x, self.pos.y, self.dim[0], self.dim[1]))
-        self.surf = pygame.Surface(self.dim).convert()
+        height = self.indent + (tileSize * 2 * (len(self.imgs)-1 // self.num))
+        self.surf = pygame.Surface((self.dim[0], height)).convert()
         self.surf.set_colorkey((0,0,0))
         self.rects = []
         self.num = int(self.dim[0] / (tileSize * 2))
@@ -42,7 +43,6 @@ class TileSelection:
             )
             self.surf.blit(img, pos)
             self.rects.append([pos[0] + self.pos[0], pos[1] + self.pos[1], tileSize, tileSize])
-
 
 class EditStates(Enum):
     NONE = auto()
@@ -98,7 +98,7 @@ def generateChunks(drawTiles, collidableTiles, tileSize, optimize=True, chunkSiz
                 pos = key.split(';')
                 pos = [int(s) for s in pos]
                 
-                chunkPos = f"{int(pos[0] / chunkSize)};{int(pos[1] / chunkSize)}"
+                chunkPos = f"{math.floor(pos[0] / chunkSize)};{math.floor(pos[1] / chunkSize)}"
 
                 if chunkPos not in chunks:
                     chunks[chunkPos] = []
@@ -143,7 +143,7 @@ def optimizeTilemapCollision(rects, tileSize):
         goingDown = True
 
         while goingDown:
-            testRects = [(rect[0] + i * tileSize, rect[1] + offset * tileSize, tileSize, tileSize) for i in range(int(width / tileSize))]
+            testRects = [(rect[0] + i * tileSize, rect[1] + offset * tileSize, tileSize, tileSize) for i in range(math.floor(width / tileSize))]
 
             for tr in testRects:
                 if tr not in rects or tr in usedRects:
